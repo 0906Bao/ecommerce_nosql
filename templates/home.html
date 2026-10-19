@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">MUA SẮM ĐA NGÀNH HÀNG</p>
+  <h1>Khám phá sản phẩm phù hợp với bạn</h1>
+  <p>Website demo thương mại điện tử sử dụng Flask và MongoDB.</p>
+  <a class="button" href="{{ url_for('products.list_products') }}">Xem sản phẩm</a>
+</section>
+<section class="panel">
+  <h2>Chức năng dự kiến</h2>
+  <div class="feature-grid">
+    <article><h3>Sản phẩm đa dạng</h3><p>Điện tử, thời trang, gia dụng với thuộc tính linh hoạt.</p></article>
+    <article><h3>Đặt hàng</h3><p>Giỏ hàng và lưu thông tin sản phẩm tại thời điểm mua.</p></article>
+    <article><h3>Dashboard</h3><p>Thống kê doanh thu và Top 5 sản phẩm bán chạy.</p></article>
+  </div>
+</section>
+{% endblock %}

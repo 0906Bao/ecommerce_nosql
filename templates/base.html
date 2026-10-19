@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or "E-commerce" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('home') }}">E-Commerce</a>
+    <nav>
+      <a href="{{ url_for('home') }}">Trang chủ</a>
+      <a href="{{ url_for('products.list_products') }}">Sản phẩm</a>
+      <a href="{{ url_for('cart.view_cart') }}">Giỏ hàng</a>
+      <a href="{{ url_for('admin.dashboard') }}">Quản trị</a>
+      <a href="{{ url_for('auth.login') }}">Đăng nhập</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">Đề tài NoSQL — MongoDB + Flask</footer>
+</body>
+</html>

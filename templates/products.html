@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sản phẩm</h1>
+{% if products %}
+  <div class="product-grid">
+  {% for p in products %}
+    <article class="product-card">
+      <span class="category">{{ p.get("danh_muc", "Chưa phân loại") }}</span>
+      <h2>{{ p.get("ten", "Sản phẩm chưa đặt tên") }}</h2>
+      <p class="price">{{ "{:,.0f}".format(p.get("gia", 0)) }} đ</p>
+      <p>{{ p.get("mo_ta", "Chưa có mô tả") }}</p>
+    </article>
+  {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h2>Chưa có sản phẩm</h2>
+    <p>Kết nối MongoDB thành công rồi nạp dữ liệu mẫu để hiển thị sản phẩm.</p>
+  </div>
+{% endif %}
+{% endblock %}
