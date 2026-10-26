@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Quản lý sản phẩm</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tên sản phẩm</th>
+                <th>Giá</th>
+                <th>Danh mục</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.get('name', 'Chưa có tên') }}</td>
+                <td>{{ product.get('price', 0) }}</td>
+                <td>{{ product.get('category', 'Chưa phân loại') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">Chưa có sản phẩm nào.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

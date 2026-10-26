@@ -2,6 +2,9 @@ import os
 from flask import Flask, render_template
 from dotenv import load_dotenv
 
+# Load biến môi trường đầu tiên
+load_dotenv()
+
 from database.connection import close_mongo
 from routes.auth import auth_bp
 from routes.products import products_bp
@@ -10,9 +13,7 @@ from routes.cart import cart_bp
 from routes.orders import orders_bp
 from routes.admin import admin_bp
 from routes.reviews import reviews_bp
-
-load_dotenv()
-
+from routes.info import info_bp  # <--- 1. Import blueprint thông tin tiện ích
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +21,7 @@ def create_app():
     app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017/")
     app.config["MONGO_DB"] = os.getenv("MONGO_DB", "ecommerce_nosql")
 
+    # 2. Đăng ký blueprint bên trong factory function (nơi biến app đã tồn tại)
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(categories_bp)
@@ -27,6 +29,7 @@ def create_app():
     app.register_blueprint(orders_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(reviews_bp)
+    app.register_blueprint(info_bp)  # <--- 2. Đăng ký info_bp tại đây
 
     @app.get("/")
     def home():
@@ -49,7 +52,7 @@ def create_app():
 
     return app
 
-
+# Khởi tạo ứng dụng app từ factory
 app = create_app()
 
 if __name__ == "__main__":
@@ -57,4 +60,5 @@ if __name__ == "__main__":
         host=os.getenv("FLASK_HOST", "127.0.0.1"),
         port=int(os.getenv("FLASK_PORT", "5000")),
         debug=os.getenv("FLASK_DEBUG", "false").lower() == "true",
+        use_reloader=False,
     )

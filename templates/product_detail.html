@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="product-detail-page">
+
+  <nav class="breadcrumb">
+    <a href="{{ url_for('home') }}">Trang chủ</a>
+    <span>›</span>
+    <a href="{{ url_for('products.list_products') }}">Sản phẩm</a>
+    <span>›</span>
+    <span>{{ product.get('name', 'Chi tiết sản phẩm') }}</span>
+  </nav>
+
+  <div class="product-detail-layout">
+
+    <div class="product-detail-image-wrapper">
+      <img
+        class="product-detail-image"
+        src="{{ product.get('image_url') or 'https://placehold.co/800x800?text=Product' }}"
+        alt="{{ product.get('name', 'Sản phẩm') }}"
+        onerror="this.onerror=null;this.src='https://placehold.co/800x800?text=No+Image';"
+      >
+    </div>
+
+    <div class="product-detail-info">
+
+      <span class="category">
+        {{ product.get('category_name', 'Chưa phân loại') }}
+      </span>
+
+      <h1>{{ product.get('name', 'Sản phẩm chưa đặt tên') }}</h1>
+
+      <p class="product-detail-price">
+        {{ "{:,.0f}".format(product.get('price', 0) | float) }} đ
+      </p>
+
+      <p class="product-detail-description">
+        {{ product.get('description', 'Sản phẩm chưa có mô tả.') }}
+      </p>
+
+      <div class="product-detail-meta">
+        <p>
+          <strong>Mã sản phẩm:</strong>
+          {{ product.get('sku', 'N/A') }}
+        </p>
+
+        <p>
+          <strong>Danh mục:</strong>
+          {{ product.get('category_name', 'Chưa phân loại') }}
+        </p>
+
+        {% if product.get('attributes', {}).get('brand') %}
+          <p>
+            <strong>Thương hiệu:</strong>
+            {{ product.get('attributes', {}).get('brand') }}
+          </p>
+        {% endif %}
+
+        <p>
+          <strong>Tình trạng:</strong>
+
+          {% if product.get('stock', 0) | int > 0 %}
+            <span class="stock-available">
+              Còn hàng ({{ product.get('stock') }})
+            </span>
+          {% else %}
+            <span class="stock-unavailable">Hết hàng</span>
+          {% endif %}
+        </p>
+      </div>
+
+      {% if product.get('attributes') %}
+        <div class="product-specifications">
+          <h2>Thông số sản phẩm</h2>
+
+          <table>
+            <tbody>
+              {% for key, value in product.get('attributes', {}).items() %}
+                <tr>
+                  <th>{{ key.replace('_', ' ') | title }}</th>
+                  <td>
+                    {% if value is sequence and value is not string %}
+                      {{ value | join(', ') }}
+                    {% elif value is mapping %}
+                      {{ value | tojson }}
+                    {% else %}
+                      {{ value }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      <div class="product-detail-actions">
+        <a
+          class="button button-secondary"
+          href="{{ url_for('products.list_products') }}"
+        >
+          Quay lại sản phẩm
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  {% if related_products %}
+    <section class="related-products">
+      <h2>Sản phẩm cùng danh mục</h2>
+
+      <div class="product-grid">
+        {% for p in related_products %}
+          <article class="product-card">
+
+            <a href="{{ url_for('products.product_detail', product_id=p._id) }}">
+              <img
+                class="product-image"
+                src="{{ p.get('image_url') or 'https://placehold.co/600x450?text=Product' }}"
+                alt="{{ p.get('name', 'Sản phẩm') }}"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='https://placehold.co/600x450?text=No+Image';"
+              >
+            </a>
+
+            <div class="product-card-content">
+              <h3>
+                <a href="{{ url_for('products.product_detail', product_id=p._id) }}">
+                  {{ p.get('name', 'Sản phẩm') }}
+                </a>
+              </h3>
+
+              <p class="price">
+                {{ "{:,.0f}".format(p.get('price', 0) | float) }} đ
+              </p>
+            </div>
+
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+</section>
+{% endblock %}
