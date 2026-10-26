@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from database.connection import db
 from bson.objectid import ObjectId
-from routes.auth import admin_required  # Import decorator phân quyền
+from routes.auth import admin_required
 
 admin_bp = Blueprint('admin', __name__)
 
