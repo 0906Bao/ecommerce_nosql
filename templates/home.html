@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+  <!-- Hero Banner Section -->
+  <div class="p-5 mb-5 bg-gradient text-white rounded-4 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);">
+    <div class="position-relative z-1 py-3">
+            <span class="badge bg-light text-primary fw-bold px-3 py-2 rounded-pill mb-3">
+                <i class="fa-solid fa-graduation-cap me-1"></i> Đồ án Cơ sở NoSQL & E-Commerce
+            </span>
+      <h1 class="display-4 fw-bold mb-3">Khám Phá Sản Phẩm Phù Hợp Với Bạn</h1>
+      <p class="lead mb-4 opacity-90">
+        Hệ thống thương mại điện tử hiện đại xây dựng trên nền tảng Python Flask và cơ sở dữ liệu MongoDB, tối ưu hóa cho các truy vấn linh hoạt và phân tích dữ liệu lớn.
+      </p>
+      <div class="d-flex gap-3">
+        <a href="/products" class="btn btn-light btn-lg text-primary fw-bold px-4 rounded-pill shadow-sm">
+          <i class="fa-solid fa-store me-2"></i> Xem Sản Phẩm
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: Các tính năng cốt lõi -->
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+        <div class="card-body text-center">
+          <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fa-solid fa-shapes fa-2x"></i>
+          </div>
+          <h4 class="card-title fw-bold text-dark">Sản Phẩm Đa Dạng</h4>
+          <p class="card-text text-muted small">
+            Áp dụng <strong>Polymorphic Schema</strong> lưu trữ linh hoạt các ngành hàng Điện tử, Thời trang, Gia dụng.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+        <div class="card-body text-center">
+          <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fa-solid fa-cart-shopping fa-2x"></i>
+          </div>
+          <h4 class="card-title fw-bold text-dark">Giỏ Hàng & Đặt Hàng</h4>
+          <p class="card-text text-muted small">
+            Sử dụng mô hình <strong>Embedded Documents</strong> nhúng chi tiết sản phẩm vào hóa đơn tại thời điểm mua.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+        <div class="card-body text-center">
+          <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+            <i class="fa-solid fa-chart-pie fa-2x"></i>
+          </div>
+          <h4 class="card-title fw-bold text-dark">Thống Kê Dashboard</h4>
+          <p class="card-text text-muted small">
+            Sử dụng <strong>Aggregation Pipeline</strong> để thống kê doanh thu và phân tích Top sản phẩm bán chạy.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

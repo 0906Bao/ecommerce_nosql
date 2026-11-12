@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 450px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="text-center mb-4">
+            <div class="display-5 text-primary mb-2"><i class="fa-solid fa-user-lock"></i></div>
+            <h3 class="fw-bold text-dark">Đăng Nhập Hệ Thống</h3>
+            <p class="text-muted small">Chào mừng bạn quay trở lại với E-Commerce</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger py-2 small text-center">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Email hoặc Số điện thoại</label>
+                <input type="text" name="login_id" class="form-control" required placeholder="Nhập email, SĐT hoặc 'admin'...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Mật khẩu</label>
+                <input type="password" name="password" class="form-control" required placeholder="Nhập mật khẩu...">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow-sm mt-2">
+                <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập
+            </button>
+        </form>
+
+        <!-- Phân cách mạng xã hội -->
+        <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1">
+            <span class="px-2 text-muted small">Hoặc đăng nhập nhanh</span>
+            <hr class="flex-grow-1">
+        </div>
+
+        <!-- Nút Facebook & Google (Giao diện chuẩn thực tế cho đồ án) -->
+        <div class="d-grid gap-2 mb-3">
+            <button type="button" class="btn btn-outline-primary btn-sm py-2 rounded-pill fw-bold" onclick="alert('Tính năng liên kết Facebook OAuth đang được phát triển cho phiên bản thương mại thực tế!')">
+                <i class="fa-brands fa-facebook me-2 fs-6"></i> Tiếp tục với Facebook
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm py-2 rounded-pill fw-bold" onclick="alert('Tính năng liên kết Google OAuth đang được phát triển cho phiên bản thương mại thực tế!')">
+                <i class="fa-brands fa-google me-2 fs-6"></i> Tiếp tục với Google
+            </button>
+        </div>
+
+        <div class="text-center mt-3 small">
+            <span class="text-muted">Chưa có tài khoản?</span> <a href="/register" class="fw-bold text-decoration-none">Đăng ký ngay</a>
+        </div>
+
+        <div class="mt-4 p-3 bg-light rounded-3 small text-muted">
+            <strong>Tài khoản Admin test:</strong> <code>admin</code> / <code>123456</code>
+        </div>
+    </div>
+</div>
+{% endblock %}

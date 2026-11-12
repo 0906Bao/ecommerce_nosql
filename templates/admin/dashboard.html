@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Trang Quản Trị & Báo Cáo</h2>
+      <p class="text-muted mb-0">Thống kê doanh thu và phân tích dữ liệu thời gian thực với MongoDB Aggregation</p>
+    </div>
+    <a href="/products" class="btn btn-outline-primary rounded-pill px-4 fw-bold">
+      <i class="fa-solid fa-store me-1"></i> Xem cửa hàng
+    </a>
+  </div>
+
+  <!-- 3 Thẻ Thống kê tổng quan (Cards) -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Doanh Thu</h6>
+            <h3 class="fw-extrabold mb-0">{{ "{:,.0f}".format(total_revenue) }} đ</h3>
+          </div>
+          <div class="fs-1 opacity-50"><i class="fa-solid fa-wallet"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-success text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Đơn Hàng</h6>
+            <h3 class="fw-extrabold mb-0">{{ total_orders }}</h3>
+          </div>
+          <div class="fs-1 opacity-50"><i class="fa-solid fa-receipt"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-warning text-dark">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Sản Phẩm</h6>
+            <h3 class="fw-extrabold mb-0">{{ total_products }}</h3>
+          </div>
+          <div class="fs-1 opacity-50"><i class="fa-solid fa-boxes-stacked"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bảng Top 5 Sản Phẩm Bán Chạy -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h4 class="fw-bold mb-4"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top 5 Sản Phẩm Bán Chạy Nhất</h4>
+
+    {% if top_products %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Tên sản phẩm</th>
+          <th>Tổng số lượng bán</th>
+          <th>Tổng doanh thu mang lại</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in top_products %}
+        <tr>
+          <td class="fw-bold text-muted">#{{ loop.index }}</td>
+          <td class="fw-bold text-dark">{{ p._id }}</td>
+          <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill fw-bold">
+                                {{ p.total_sold }} sản phẩm
+                            </span>
+          </td>
+          <td class="text-danger fw-bold">{{ "{:,.0f}".format(p.total_revenue) }} đ</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <div class="display-4 mb-2"><i class="fa-solid fa-chart-pie"></i></div>
+      <p>Chưa có đủ dữ liệu đơn hàng để thống kê top sản phẩm.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

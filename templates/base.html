@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title|default("E-Commerce NoSQL") }}</title>
+
+  <!-- Bootstrap 5 CSS CDN (Bắt buộc phải có để hiển thị giao diện đẹp) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<!-- HEADER CHÍNH -->
+<header class="bg-danger text-white shadow-sm sticky-top">
+  <div class="container py-2">
+    <div class="row align-items-center">
+      <!-- Logo -->
+      <div class="col-lg-3 col-md-3">
+        <a class="navbar-brand fw-bold fs-4 text-white text-decoration-none d-flex align-items-center" href="/">
+          <i class="fa-solid fa-store me-2"></i>E-COMMERCE
+        </a>
+      </div>
+
+      <!-- Thanh tìm kiếm -->
+      <div class="col-lg-6 col-md-6 my-2 my-md-0">
+        <form action="/products" method="GET" class="input-group">
+          <input type="text" name="q" class="form-control rounded-start-pill border-0 px-3 py-2 shadow-none" placeholder="Bạn cần tìm gì..." value="{{ search_keyword|default('') }}">
+          <button class="btn btn-light text-danger rounded-end-pill px-4 fw-bold" type="submit">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Tài khoản & Giỏ hàng -->
+      <div class="col-lg-3 col-md-3 text-end d-flex justify-content-end align-items-center">
+        {% if session.get('user') %}
+        <div class="dropdown">
+          <button class="btn btn-dark btn-sm rounded-pill px-3 dropdown-toggle text-white fw-bold shadow-sm" type="button" data-bs-toggle="dropdown">
+            <i class="fa-solid fa-user me-1"></i> {{ session.get('user') }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+            {% if session.get('role') == 'admin' %}
+            <li><a class="dropdown-item fw-bold text-warning" href="/admin/dashboard"><i class="fa-solid fa-chart-line me-2"></i>Dashboard</a></li>
+            <li><a class="dropdown-item fw-bold text-info" href="/admin/products"><i class="fa-solid fa-boxes-stacked me-2"></i>Quản lý sản phẩm</a></li>
+            <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item text-danger fw-bold" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất</a></li>
+          </ul>
+        </div>
+        {% else %}
+        <a href="/login" class="btn btn-light btn-sm rounded-pill px-4 fw-bold text-danger shadow-sm">
+          <i class="fa-solid fa-user me-1"></i> Đăng nhập
+        </a>
+        {% endif %}
+
+        <a href="/cart" class="btn btn-dark btn-sm rounded-pill px-3 ms-2 text-white shadow-sm">
+          <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- THANH TIỆN ÍCH PHÍA DƯỚI -->
+  <div class="bg-white text-dark border-bottom shadow-sm py-2">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center small fw-bold">
+        <a href="/products" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-border-all text-danger me-1"></i> Tất cả sản phẩm
+        </a>
+        <a href="/khuyen-mai" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-tags text-danger me-1"></i> Tất cả khuyến mãi
+        </a>
+        <a href="/tin-tuc" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-newspaper text-danger me-1"></i> Tin tức-Review
+        </a>
+        <a href="/bao-hanh" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-screwdriver-wrench text-danger me-1"></i> Tra Cứu Bảo Hành
+        </a>
+        <a href="/dich-vu" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-house-laptop text-danger me-1"></i> Dịch vụ tận nhà
+        </a>
+        <a href="/thu-cu" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-rotate text-danger me-1"></i> Thu cũ đổi mới
+        </a>
+        <a href="/showroom" class="text-decoration-none text-dark py-1 px-2">
+          <i class="fa-solid fa-location-dot text-danger me-1"></i> Hệ Thống Showroom
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- NỘI DUNG CHÍNH -->
+<main class="py-4">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Bootstrap 5 JS Bundle CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

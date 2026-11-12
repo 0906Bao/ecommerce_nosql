@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 450px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="text-center mb-4">
+            <div class="display-5 text-success mb-2"><i class="fa-solid fa-user-plus"></i></div>
+            <h3 class="fw-bold text-dark">Tạo Tài Khoản Mới</h3>
+            <p class="text-muted small">Đăng ký bằng Email hoặc Số điện thoại</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger py-2 small text-center">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Họ và tên</label>
+                <input type="text" name="name" class="form-control" required placeholder="Nhập họ tên của bạn...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Email hoặc Số điện thoại</label>
+                <input type="text" name="login_contact" class="form-control" required placeholder="Nhập email hoặc số điện thoại...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Mật khẩu</label>
+                <input type="password" name="password" class="form-control" required placeholder="Tạo mật khẩu bảo mật...">
+            </div>
+            <button type="submit" class="btn btn-success w-100 py-2 fw-bold rounded-pill shadow-sm mt-2">
+                <i class="fa-solid fa-check me-1"></i> Đăng Ký Ngay
+            </button>
+        </form>
+
+        <div class="text-center mt-3 small">
+            <span class="text-muted">Đã có tài khoản?</span> <a href="/login" class="fw-bold text-decoration-none">Đăng nhập</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

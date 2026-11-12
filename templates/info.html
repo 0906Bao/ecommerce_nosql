@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h2 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>{{ title }}</h2>
+        <hr class="mb-4">
+
+        {% if type == 'promo' %}
+        <p class="text-muted">Tổng hợp các chương trình ưu đãi, mã giảm giá và flash sale hấp dẫn nhất:</p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 border-start border-4 border-danger">
+                    <h5 class="fw-bold text-danger">Giảm 20% Đơn Hàng Đầu Tiên</h5>
+                    <p class="small text-muted mb-0">Áp dụng cho khách hàng mới đăng ký tài khoản và phát sinh giao dịch đầu tiên.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                    <h5 class="fw-bold text-primary">Miễn Phí Vận Chuyển</h5>
+                    <p class="small text-muted mb-0">Áp dụng toàn quốc cho hóa đơn từ 500,000 đ trở lên.</p>
+                </div>
+            </div>
+        </div>
+        {% elif type == 'news' %}
+        <p class="text-muted">Các bài viết đánh giá chi tiết, review sản phẩm và tin tức công nghệ mới nhất:</p>
+        <div class="list-group list-group-flush">
+            <div class="list-group-item px-0 py-3">
+                <h5 class="fw-bold text-dark mb-1">Đánh giá chi tiết Laptop Gaming cấu hình khủng 2026</h5>
+                <small class="text-muted">Cập nhật: 26/10/2026 — Khám phá hiệu năng và tản nhiệt tối tân.</small>
+            </div>
+            <div class="list-group-item px-0 py-3">
+                <h5 class="fw-bold text-dark mb-1">Top phụ kiện không thể thiếu cho góc làm việc thông minh</h5>
+                <small class="text-muted">Cập nhật: 20/10/2026 — Gợi ý setup bàn làm việc tối ưu năng suất.</small>
+            </div>
+        </div>
+        {% elif type == 'warranty' %}
+        <p class="text-muted">Tra cứu nhanh tình trạng bảo hành thiết bị của bạn:</p>
+        <div class="input-group mb-3" style="max-width: 500px;">
+            <input type="text" class="form-control" placeholder="Nhập số điện thoại hoặc mã hóa đơn bảo hành...">
+            <button class="btn btn-primary fw-bold px-4" type="button" onclick="alert('Hệ thống đang tra cứu dữ liệu bảo hành...')">Tra cứu</button>
+        </div>
+        <div class="alert alert-secondary small mb-0">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> Trung tâm bảo hành mở cửa từ 8:00 - 18:00 (Thứ Hai đến Chủ Nhật).
+        </div>
+        {% elif type == 'services' %}
+        <p class="text-muted">Các gói dịch vụ hỗ trợ kỹ thuật và lắp đặt tận nhà chuyên nghiệp:</p>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><i class="fa-solid fa-check text-success me-2"></i> Lắp đặt và cấu hình hệ thống thiết bị mạng tại nhà.</li>
+            <li class="list-group-item"><i class="fa-solid fa-check text-success me-2"></i> Vệ sinh, bảo dưỡng định kỳ thiết bị điện tử.</li>
+            <li class="list-group-item"><i class="fa-solid fa-check text-success me-2"></i> Kiểm tra sự cố tận nơi trong vòng 2 giờ nội thành.</li>
+        </ul>
+        {% elif type == 'tradein' %}
+        <p class="text-muted">Chương trình thu cũ đổi mới trợ giá cực tốt:</p>
+        <div class="p-4 bg-light rounded-3 text-center">
+            <h4 class="fw-bold text-success mb-2">Lên Đời Thiết Bị - Trợ Giá Lên Đến 2.000.000 đ</h4>
+            <p class="text-muted small mb-3">Mang thiết bị cũ của bạn ra showroom gần nhất để được thẩm định giá thu mua tốt nhất.</p>
+            <a href="/products" class="btn btn-success rounded-pill px-4 fw-bold">Khám phá sản phẩm mới</a>
+        </div>
+        {% elif type == 'showroom' %}
+        <p class="text-muted">Danh sách các chi nhánh cửa hàng trực thuộc hệ thống:</p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 border rounded-3 bg-white shadow-sm">
+                    <h6 class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> Showroom Hồ Chí Minh</h6>
+                    <p class="small text-muted mb-0">Địa chỉ: Quận 1, TP. Hồ Chí Minh<br>Hotline: 1900 xxxx</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 border rounded-3 bg-white shadow-sm">
+                    <h6 class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> Showroom Hà Nội</h6>
+                    <p class="small text-muted mb-0">Địa chỉ: Hai Bà Trưng, Hà Nội<br>Hotline: 1900 xxxx</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-4 pt-3 border-top">
+            <a href="/products" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại cửa hàng
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
