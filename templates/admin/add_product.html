@@ -4,70 +4,73 @@
   <div class="card border-0 shadow-sm rounded-4 p-4 mx-auto" style="max-width: 700px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-plus me-2 text-primary"></i>Thêm Sản Phẩm Mới</h2>
+        <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-plus me-2 text-primary"></i>{{ 'Sửa sản phẩm' if editing else 'Thêm sản phẩm mới' }}</h2>
         <p class="text-muted mb-0">Nhập thông tin sản phẩm theo danh mục phù hợp</p>
       </div>
       <a href="/admin/products" class="btn btn-outline-secondary rounded-pill">Quay lại</a>
     </div>
 
+    {% if error %}<p class="alert alert-danger">Kiểm tra tên, danh mục, giá và tồn kho.</p>{% endif %}
+    {% if not categories %}<p><a href="{{ url_for('categories.manage_categories') }}">Tạo danh mục trước khi lưu sản phẩm</a></p>{% endif %}
+    {% set attributes = product.get('attributes') or {} %}
     <form method="POST">
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label fw-bold">Tên sản phẩm</label>
-          <input type="text" name="name" class="form-control" required>
+          <input type="text" name="name" value="{{ product.get('name', '') }}" class="form-control" required>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">Danh mục</label>
           <select name="category" class="form-select" required>
-            <option value="Điện tử">Điện tử</option>
-            <option value="Thời trang">Thời trang</option>
-            <option value="Gia dụng">Gia dụng</option>
+            {% for category in categories %}
+            <option value="{{ category }}"{% if product.get('category') == category %} selected{% endif %}>{{ category }}</option>
+            {% endfor %}
           </select>
         </div>
 
         <div class="col-md-4">
           <label class="form-label fw-bold">Giá (VNĐ)</label>
-          <input type="number" min="0" step="1000" name="price" class="form-control" required>
+          <input type="number" min="0" step="any" name="price" value="{{ product.get('price', '') }}" class="form-control" required>
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Tồn kho</label>
-          <input type="number" min="0" name="stock" class="form-control" required>
+          <input type="number" min="0" name="stock" value="{{ product.get('stock', '') }}" class="form-control" required>
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Ảnh</label>
-          <input type="text" name="image" class="form-control" placeholder="product_001.jpg">
+          <input type="text" name="image" value="{{ product.get('image', '') }}" class="form-control" placeholder="product_001.jpg">
         </div>
 
         <div class="col-12">
           <label class="form-label fw-bold">Mô tả</label>
-          <textarea name="description" class="form-control" rows="3"></textarea>
+          <textarea name="description" class="form-control" rows="3">{{ product.get('description', '') }}</textarea>
         </div>
 
         <div class="col-md-6">
           <label class="form-label fw-bold">CPU</label>
-          <input type="text" name="cpu" class="form-control" placeholder="Intel Core i5">
+          <input type="text" name="cpu" value="{{ attributes.get('cpu', '') }}" class="form-control" placeholder="Intel Core i5">
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">RAM</label>
-          <input type="text" name="ram" class="form-control" placeholder="16GB">
+          <input type="text" name="ram" value="{{ attributes.get('ram', '') }}" class="form-control" placeholder="16GB">
         </div>
 
         <div class="col-md-6">
           <label class="form-label fw-bold">Kích thước / Size</label>
-          <input type="text" name="size" class="form-control" placeholder="S, M, L">
+          <input type="text" name="size" value="{{ attributes.get('size', []) | join(', ') }}" class="form-control" placeholder="S, M, L">
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">Chất liệu</label>
-          <input type="text" name="material" class="form-control" placeholder="Cotton 100%">
+          <input type="text" name="material" value="{{ attributes.get('material', '') }}" class="form-control" placeholder="Cotton 100%">
         </div>
 
         <div class="col-md-6">
           <label class="form-label fw-bold">Công suất</label>
-          <input type="text" name="power" class="form-control" placeholder="1200W">
+          <input type="text" name="power" value="{{ attributes.get('power', '') }}" class="form-control" placeholder="1200W">
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">Xuất xứ</label>
-          <input type="text" name="origin" class="form-control" placeholder="Việt Nam">
+          <input type="text" name="origin" value="{{ attributes.get('origin', '') }}" class="form-control" placeholder="Việt Nam">
         </div>
       </div>
 

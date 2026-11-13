@@ -1,0 +1,7 @@
+{% macro rating_summary(rating) %}
+  {% if rating %}
+  <p class="small mb-2"><span class="text-warning" aria-hidden="true">★</span> <strong>{{ "%.1f" | format(rating.average) }}/5</strong> · {{ rating.count }} đánh giá</p>
+  {% else %}
+  <p class="small text-muted mb-2">Chưa có đánh giá</p>
+  {% endif %}
+{% endmacro %}

@@ -12,6 +12,18 @@
     </a>
   </div>
 
+  <form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-auto"><label for="start">Từ ngày</label><input class="form-control" type="date" id="start" name="start" value="{{ start }}"></div>
+    <div class="col-auto"><label for="end">Đến ngày</label><input class="form-control" type="date" id="end" name="end" value="{{ end }}"></div>
+    <div class="col-auto">
+      <label for="period">Nhóm doanh thu theo</label>
+      <select class="form-select" id="period" name="period">
+        <option value="day"{% if period == 'day' %} selected{% endif %}>Ngày</option>
+        <option value="month"{% if period == 'month' %} selected{% endif %}>Tháng</option>
+      </select>
+    </div>
+    <div class="col-auto"><button class="btn btn-primary" type="submit">Lọc báo cáo</button></div>
+  </form>
   <!-- 3 Thẻ Thống kê tổng quan (Cards) -->
   <div class="row g-4 mb-5">
     <div class="col-md-4">
@@ -51,6 +63,21 @@
     </div>
   </div>
 
+  <div class="card p-4 mb-4">
+    <h4>Doanh thu theo {{ 'ngày' if period == 'day' else 'tháng' }}</h4>
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>Thời gian</th><th>Số đơn</th><th>Doanh thu</th></tr></thead>
+        <tbody>
+          {% for row in revenue_by_period %}
+          <tr><td>{{ row._id }}</td><td>{{ row.orders }}</td><td>{{ "{:,.0f}".format(row.total_revenue) }} đ</td></tr>
+          {% else %}
+          <tr><td colspan="3">Không có đơn hàng trong khoảng đã chọn.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
   <!-- Bảng Top 5 Sản Phẩm Bán Chạy -->
   <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
     <h4 class="fw-bold mb-4"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top 5 Sản Phẩm Bán Chạy Nhất</h4>
@@ -70,7 +97,7 @@
         {% for p in top_products %}
         <tr>
           <td class="fw-bold text-muted">#{{ loop.index }}</td>
-          <td class="fw-bold text-dark">{{ p._id }}</td>
+          <td class="fw-bold text-dark">{{ p.name }}</td>
           <td>
                             <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill fw-bold">
                                 {{ p.total_sold }} sản phẩm

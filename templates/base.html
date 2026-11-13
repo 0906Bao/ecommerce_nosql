@@ -42,6 +42,10 @@
             <i class="fa-solid fa-user me-1"></i> {{ session.get('user') }}
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+            {% if session.get('role') == 'customer' %}
+            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Thông tin cá nhân</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('orders.list_orders') }}">Lịch sử đơn hàng</a></li>
+            {% endif %}
             {% if session.get('role') == 'admin' %}
             <li><a class="dropdown-item fw-bold text-warning" href="/admin/dashboard"><i class="fa-solid fa-chart-line me-2"></i>Dashboard</a></li>
             <li><a class="dropdown-item fw-bold text-info" href="/admin/products"><i class="fa-solid fa-boxes-stacked me-2"></i>Quản lý sản phẩm</a></li>

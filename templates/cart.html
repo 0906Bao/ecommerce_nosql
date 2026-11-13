@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+{% for message in get_flashed_messages(category_filter=['cart_error']) %}
+<div class="container mt-3"><p class="alert alert-danger" role="alert">{{ message }}</p></div>
+{% endfor %}
+{% if session.get('role') == 'customer' %}
+<div class="container mt-3"><a href="{{ url_for('orders.list_orders') }}">Lịch sử đơn hàng</a></div>
+{% endif %}
 <div class="container py-4">
     <h2 class="fw-bold mb-4"><i class="fa-solid fa-cart-shopping me-2"></i>Giỏ Hàng Của Bạn</h2>
 
@@ -62,15 +68,15 @@
                 <form action="/cart/checkout" method="POST">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Họ tên người nhận</label>
-                        <input type="text" name="customer_name" class="form-control" required placeholder="Nhập họ tên...">
+                        <input type="text" name="customer_name" autocomplete="name" value="{{ customer.get('name') or '' }}" class="form-control" required placeholder="Nhập họ tên...">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Số điện thoại</label>
-                        <input type="text" name="phone" class="form-control" required placeholder="Nhập số điện thoại...">
+                        <input type="tel" name="phone" autocomplete="tel" value="{{ customer.get('phone') or '' }}" class="form-control" required placeholder="Nhập số điện thoại...">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Địa chỉ giao hàng</label>
-                        <textarea name="address" class="form-control" rows="2" required placeholder="Nhập địa chỉ..."></textarea>
+                        <textarea name="address" autocomplete="street-address" class="form-control" rows="2" required placeholder="Nhập địa chỉ...">{{ customer.get('address', customer.get('shipping_address')) or '' }}</textarea>
                     </div>
 
                     <hr class="my-3">

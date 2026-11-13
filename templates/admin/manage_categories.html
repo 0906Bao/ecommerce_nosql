@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2>Quản lý danh mục</h2>
+  <a href="{{ url_for('admin.manage_products') }}">Quản lý sản phẩm</a>
+  <form method="post" class="card p-3 my-3">
+    <label for="category-name">Tên danh mục</label>
+    <input id="category-name" name="name" class="form-control mb-2" required>
+    <label for="category-description">Mô tả</label>
+    <input id="category-description" name="description" class="form-control mb-2">
+    <button class="btn btn-primary" type="submit">Thêm danh mục</button>
+  </form>
+  {% for category in categories %}
+  <div class="card p-3 mb-2">
+    {% if category.managed %}
+    <form method="post" action="{{ url_for('categories.edit_category', category_id=category.id) }}">
+      <label for="name-{{ loop.index }}">Tên danh mục</label>
+      <input id="name-{{ loop.index }}" name="name" value="{{ category.name }}" class="form-control mb-2" required>
+      <label for="description-{{ loop.index }}">Mô tả</label>
+      <input id="description-{{ loop.index }}" name="description" value="{{ category.mo_ta }}" class="form-control mb-2">
+      <button class="btn btn-outline-primary" type="submit">Lưu</button>
+    </form>
+    <form method="post" class="mt-2" action="{{ url_for('categories.delete_category', category_id=category.id) }}">
+      <button class="btn btn-outline-danger" type="submit">Xóa</button>
+    </form>
+    {% else %}
+    <form method="post">
+      <input type="hidden" name="name" value="{{ category.name }}">
+      <span>{{ category.name }}</span>
+      <button class="btn btn-outline-primary" type="submit">Thêm vào danh mục quản lý</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <p>Chưa có danh mục.</p>
+  {% endfor %}
+</div>
+{% endblock %}
