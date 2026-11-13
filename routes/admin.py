@@ -5,6 +5,14 @@ from routes.auth import admin_required  # Import decorator phân quyền
 
 admin_bp = Blueprint('admin', __name__)
 
+
+@admin_bp.route('/admin/', endpoint='dashboard_root')
+@admin_bp.route('/admin', endpoint='dashboard_root_short')
+@admin_required
+def admin_dashboard_root():
+    return redirect(url_for('admin.dashboard'))
+
+
 @admin_bp.route('/admin/dashboard', endpoint='dashboard')
 @admin_required
 def admin_dashboard():
@@ -37,11 +45,13 @@ def admin_dashboard():
         top_products=top_products
     )
 
+
 @admin_bp.route('/admin/products', endpoint='manage_products')
 @admin_required
 def manage_products():
-    products = list(db.sanpham.find({}))
+    products = list(db.sanpham.find({}).sort('name', 1))
     return render_template('admin/manage_products.html', products=products)
+
 
 @admin_bp.route('/admin/products/add', methods=['GET', 'POST'], endpoint='add_product')
 @admin_required
@@ -49,8 +59,8 @@ def add_product():
     if request.method == 'POST':
         name = request.form.get('name')
         category = request.form.get('category')
-        price = float(request.form.get('price', 0))
-        stock = int(request.form.get('stock', 0))
+        price = float(request.form.get('price', 0) or 0)
+        stock = int(request.form.get('stock', 0) or 0)
         description = request.form.get('description', '')
 
         attributes = {}
@@ -59,7 +69,7 @@ def add_product():
             attributes['ram'] = request.form.get('ram', '')
         elif category == 'Thời trang':
             size_raw = request.form.get('size', '')
-            attributes['size'] = [s.strip() for s in size_raw.split(',')]
+            attributes['size'] = [s.strip() for s in size_raw.split(',') if s.strip()]
             attributes['material'] = request.form.get('material', '')
         elif category == 'Gia dụng':
             attributes['power'] = request.form.get('power', '')
@@ -78,6 +88,7 @@ def add_product():
         return redirect(url_for('admin.manage_products'))
 
     return render_template('admin/add_product.html')
+
 
 @admin_bp.route('/admin/products/delete/<product_id>', methods=['POST'], endpoint='delete_product')
 @admin_required

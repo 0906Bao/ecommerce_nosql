@@ -1,31 +1,52 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container">
-    <h1>Quản lý sản phẩm</h1>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-boxes-stacked me-2 text-primary"></i>Quản Lý Sản Phẩm</h2>
+      <p class="text-muted mb-0">Thêm, xem và xoá sản phẩm trong kho hàng</p>
+    </div>
+    <a href="/admin/products/add" class="btn btn-primary rounded-pill px-4 fw-bold">
+      <i class="fa-solid fa-plus me-1"></i> Thêm sản phẩm
+    </a>
+  </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Tên sản phẩm</th>
-                <th>Giá</th>
-                <th>Danh mục</th>
-            </tr>
+  {% if products %}
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Tên sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Giá</th>
+            <th>Tồn kho</th>
+            <th class="text-end">Hành động</th>
+          </tr>
         </thead>
-
         <tbody>
-            {% for product in products %}
-            <tr>
-                <td>{{ product.get('name', 'Chưa có tên') }}</td>
-                <td>{{ product.get('price', 0) }}</td>
-                <td>{{ product.get('category', 'Chưa phân loại') }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="3">Chưa có sản phẩm nào.</td>
-            </tr>
-            {% endfor %}
+          {% for product in products %}
+          <tr>
+            <td class="fw-bold text-dark">{{ product.name }}</td>
+            <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ product.category }}</span></td>
+            <td class="text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</td>
+            <td>{{ product.stock }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('admin.delete_product', product_id=product._id) }}" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill" aria-label="Delete product"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+    <div class="display-4 text-muted mb-2"><i class="fa-solid fa-box-open"></i></div>
+    <h5 class="text-muted">Chưa có sản phẩm nào trong kho.</h5>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
