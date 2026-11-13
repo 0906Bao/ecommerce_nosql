@@ -1,146 +1,111 @@
 {% extends "base.html" %}
-
+{% from "_rating.html" import rating_summary %}
 {% block content %}
-<section class="product-detail-page">
-
-  <nav class="breadcrumb">
-    <a href="{{ url_for('home') }}">Trang chủ</a>
-    <span>›</span>
-    <a href="{{ url_for('products.list_products') }}">Sản phẩm</a>
-    <span>›</span>
-    <span>{{ product.get('name', 'Chi tiết sản phẩm') }}</span>
+<div class="container py-4">
+  <nav aria-label="Đường dẫn">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('products.list_products') }}">Sản phẩm</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
   </nav>
 
-  <div class="product-detail-layout">
-
-    <div class="product-detail-image-wrapper">
-      <img
-        class="product-detail-image"
-        src="{{ product.get('image_url') or 'https://placehold.co/800x800?text=Product' }}"
-        alt="{{ product.get('name', 'Sản phẩm') }}"
-        onerror="this.onerror=null;this.src='https://placehold.co/800x800?text=No+Image';"
-      >
-    </div>
-
-    <div class="product-detail-info">
-
-      <span class="category">
-        {{ product.get('category_name', 'Chưa phân loại') }}
-      </span>
-
-      <h1>{{ product.get('name', 'Sản phẩm chưa đặt tên') }}</h1>
-
-      <p class="product-detail-price">
-        {{ "{:,.0f}".format(product.get('price', 0) | float) }} đ
-      </p>
-
-      <p class="product-detail-description">
-        {{ product.get('description', 'Sản phẩm chưa có mô tả.') }}
-      </p>
-
-      <div class="product-detail-meta">
-        <p>
-          <strong>Mã sản phẩm:</strong>
-          {{ product.get('sku', 'N/A') }}
-        </p>
-
-        <p>
-          <strong>Danh mục:</strong>
-          {{ product.get('category_name', 'Chưa phân loại') }}
-        </p>
-
-        {% if product.get('attributes', {}).get('brand') %}
-          <p>
-            <strong>Thương hiệu:</strong>
-            {{ product.get('attributes', {}).get('brand') }}
-          </p>
-        {% endif %}
-
-        <p>
-          <strong>Tình trạng:</strong>
-
-          {% if product.get('stock', 0) | int > 0 %}
-            <span class="stock-available">
-              Còn hàng ({{ product.get('stock') }})
-            </span>
-          {% else %}
-            <span class="stock-unavailable">Hết hàng</span>
-          {% endif %}
-        </p>
+  <div class="card border-0 shadow-sm rounded-4 p-4">
+    <div class="row g-4">
+      {% set image = product_image(product) %}
+      {% if image %}
+      <div class="col-md-5">
+        <img class="img-fluid rounded w-100" alt="{{ product.name }}"
+             src="{{ image if image.startswith(('https://', 'http://')) else url_for('static', filename='images/' ~ image) }}"
+             onerror="this.parentElement.hidden = true">
       </div>
-
-      {% if product.get('attributes') %}
-        <div class="product-specifications">
-          <h2>Thông số sản phẩm</h2>
-
-          <table>
-            <tbody>
-              {% for key, value in product.get('attributes', {}).items() %}
-                <tr>
-                  <th>{{ key.replace('_', ' ') | title }}</th>
-                  <td>
-                    {% if value is sequence and value is not string %}
-                      {{ value | join(', ') }}
-                    {% elif value is mapping %}
-                      {{ value | tojson }}
-                    {% else %}
-                      {{ value }}
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
       {% endif %}
-
-      <div class="product-detail-actions">
-        <a
-          class="button button-secondary"
-          href="{{ url_for('products.list_products') }}"
-        >
-          Quay lại sản phẩm
-        </a>
+      <div class="col">
+        {% if category %}
+        <a href="{{ url_for('products.list_products', category=category) }}">{{ category }}</a>
+        {% endif %}
+        <h1 class="mt-2">{{ product.name }}</h1>
+        {{ rating_summary(rating) }}
+        <p class="small text-muted mb-2">Đã bán {{ sold }}</p>
+        <p class="fs-3 fw-bold text-danger">{{ "{:,.0f}".format(product.get('price', 0) | float) }} đ</p>
+        {% if product.get('sku') %}<p>Mã sản phẩm: {{ product.sku }}</p>{% endif %}
+        <p>{{ product.get('description') or 'Sản phẩm chưa có mô tả.' }}</p>
+        {% set stock = product.get('stock', 0) | int %}
+        {% if stock > 0 %}
+        <p class="text-success">Còn {{ stock }} sản phẩm</p>
+        <form method="post" action="{{ url_for('cart.add_to_cart', product_id=product._id) }}">
+          <button type="submit" class="btn btn-primary">Thêm vào giỏ hàng</button>
+        </form>
+        {% else %}
+        <p class="text-danger">Hết hàng</p>
+        {% endif %}
       </div>
-
     </div>
+    {% if product.get('attributes') %}
+    {% set labels = {'brand': 'Thương hiệu', 'cpu': 'CPU', 'ram': 'RAM', 'size': 'Kích thước', 'color': 'Màu sắc', 'material': 'Chất liệu', 'power': 'Công suất', 'origin': 'Xuất xứ', 'capacity': 'Dung tích', 'warranty_months': 'Bảo hành (tháng)'} %}
+    <h2 class="h5 mt-4">Thông số sản phẩm</h2>
+    <table class="table mb-0">
+      <tbody>
+        {% for key, value in product.attributes.items() %}
+        <tr>
+          <th scope="row">{{ labels.get(key, key | replace('_', ' ') | title) }}</th>
+          <td>{{ value | join(', ') if value is sequence and value is not string and value is not mapping else value }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
   </div>
 
-  {% if related_products %}
-    <section class="related-products">
-      <h2>Sản phẩm cùng danh mục</h2>
-
-      <div class="product-grid">
-        {% for p in related_products %}
-          <article class="product-card">
-
-            <a href="{{ url_for('products.product_detail', product_id=p._id) }}">
-              <img
-                class="product-image"
-                src="{{ p.get('image_url') or 'https://placehold.co/600x450?text=Product' }}"
-                alt="{{ p.get('name', 'Sản phẩm') }}"
-                loading="lazy"
-                onerror="this.onerror=null;this.src='https://placehold.co/600x450?text=No+Image';"
-              >
-            </a>
-
-            <div class="product-card-content">
-              <h3>
-                <a href="{{ url_for('products.product_detail', product_id=p._id) }}">
-                  {{ p.get('name', 'Sản phẩm') }}
-                </a>
-              </h3>
-
-              <p class="price">
-                {{ "{:,.0f}".format(p.get('price', 0) | float) }} đ
-              </p>
-            </div>
-
-          </article>
+  <section id="reviews" class="card border-0 shadow-sm p-4 mt-4">
+    <h2 class="h4">Đánh giá của khách hàng</h2>
+    {% for category, message in get_flashed_messages(with_categories=true, category_filter=['review_success', 'review_error']) %}
+    <p class="alert {{ 'alert-success' if category == 'review_success' else 'alert-danger' }}" role="status">{{ message }}</p>
+    {% endfor %}
+    {% if can_review %}
+    <form method="post" action="{{ url_for('reviews.add_review', product_id=product._id) }}" class="mb-4">
+      <input type="hidden" name="csrf_token" value="{{ review_csrf_token }}">
+      <label for="rating" class="form-label">Số sao</label>
+      <select id="rating" name="rating" class="form-select mb-3" required>
+        <option value="">Chọn số sao</option>
+        {% for stars in range(5, 0, -1) %}
+        <option value="{{ stars }}">{{ stars }} sao</option>
         {% endfor %}
-      </div>
-    </section>
-  {% endif %}
+      </select>
+      <label for="review-content" class="form-label">Nội dung đánh giá</label>
+      <textarea id="review-content" name="content" class="form-control mb-3" rows="3" maxlength="2000" required></textarea>
+      <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+    </form>
+    {% elif not session.get('user') %}
+    <p><a href="{{ url_for('auth.login') }}">Đăng nhập</a> để gửi đánh giá.</p>
+    {% endif %}
+    {% for review in reviews %}
+    <article class="border-top py-3">
+      <strong>{{ review.customer_name }}</strong>
+      <span class="ms-2" aria-label="{{ review.rating }} trên 5 sao">
+        <span aria-hidden="true" class="text-warning">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
+      </span>
+      <p class="mb-0 mt-2" style="white-space: pre-wrap">{{ review.content }}</p>
+    </article>
+    {% else %}
+    <p class="text-muted mb-0">Sản phẩm chưa có đánh giá.</p>
+    {% endfor %}
+  </section>
 
-</section>
+  {% if related_products %}
+  <section class="mt-4">
+    <h2 class="h4">Sản phẩm cùng danh mục</h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+      {% for item in related_products %}
+      <div class="col">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <a href="{{ url_for('products.product_detail', product_id=item._id) }}">{{ item.name }}</a>
+          <div class="text-danger fw-bold">{{ "{:,.0f}".format(item.get('price', 0) | float) }} đ</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}

@@ -1,23 +1,68 @@
-import os
+import argparse
 import random
-from datetime import datetime, timedelta
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 
-# Load biến môi trường từ .env
-load_dotenv()
-mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/ecommerce_db')
-client = MongoClient(mongo_uri)
-db = client["ecommerce_nosql"]
+from database.connection import client
+from catalog_images import catalog_image
 
-def seed_database():
-    print("🚀 Bắt đầu quá trình sinh dữ liệu mẫu (Dummy Data)...")
 
-    # Xóa dữ liệu cũ nếu có (hoặc comment lại nếu muốn giữ)
-    db.sanpham.delete_many({})
-    db.hoadon.delete_many({})
+CATEGORIES = ("Điện tử", "Thời trang", "Gia dụng")
 
-    categories = ["Điện tử", "Thời trang", "Gia dụng"]
+
+REVIEW_COMMENTS = {
+    1: ("Sản phẩm nhận được chưa đúng như mong đợi.", "Trải nghiệm sử dụng chưa tốt."),
+    2: ("Sản phẩm dùng được nhưng chất lượng chưa như kỳ vọng.", "Đóng gói ổn, chất lượng cần cải thiện."),
+    3: ("Sản phẩm đúng mô tả, chất lượng ở mức ổn.", "Giá hợp lý, cần dùng thêm để đánh giá."),
+    4: ("Sản phẩm đúng mô tả, đóng gói cẩn thận.", "Dùng khá tốt và phù hợp với giá."),
+    5: ("Rất hài lòng, sản phẩm đúng như mô tả.", "Giao hàng nhanh, chất lượng tốt."),
+}
+
+
+def seed_reviews(database_name):
+    if not database_name.startswith("ecommerce_demo_"):
+        raise ValueError("Use an isolated database named ecommerce_demo_*.")
+
+    db = client[database_name]
+    now = datetime.now(timezone.utc)
+    inserted = 0
+    for product in db.sanpham.find({}, {"_id": 1}):
+        product_id = product["_id"]
+        existing = db.reviews.count_documents({"product_id": product_id}, limit=10)
+        if existing >= 3:
+            continue
+
+        target = random.randint(3, 10)
+        for index in range(target - existing):
+            rating = random.choices(range(1, 6), weights=(1, 2, 5, 12, 15))[0]
+            result = db.reviews.update_one(
+                {"_id": f"demo-review:{type(product_id).__name__}:{product_id}:{index}"},
+                {"$setOnInsert": {
+                    "product_id": product_id,
+                    "customer_name": f"Khách hàng mẫu {index + 1}",
+                    "rating": rating,
+                    "content": random.choice(REVIEW_COMMENTS[rating]),
+                    "created_at": now - timedelta(days=random.randint(0, 30)),
+                }},
+                upsert=True,
+            )
+            inserted += result.upserted_id is not None
+
+    print(f"Đã thêm {inserted} đánh giá mẫu.")
+    return inserted
+
+
+def seed_database(database_name, product_count=100, order_count=50):
+    if not database_name.startswith("ecommerce_demo_"):
+        raise ValueError("Use an isolated database named ecommerce_demo_*.")
+    if product_count < 5 or order_count < 1:
+        raise ValueError("Use at least 5 products and 1 order.")
+
+    db = client[database_name]
+    if any(db[name].find_one() is not None for name in ("danhmuc", "sanpham", "hoadon")):
+        raise ValueError("Demo database already contains data. Choose a fresh database name.")
+
+    now = datetime.now(timezone.utc)
+    db.danhmuc.insert_many([{"ten": name} for name in CATEGORIES])
 
     # Danh sách dữ liệu mẫu theo ngành hàng để trộn ngẫu nhiên
     elec_names = ["Laptop Dell", "Smartphone Samsung", "Tai nghe Bluetooth", "Bàn phím cơ", "Màn hình LG", "Loa JBL", "Chuột không dây", "Ổ cứng SSD 1TB"]
@@ -26,9 +71,9 @@ def seed_database():
 
     products = []
 
-    # 1. Sinh 100 sản phẩm (Polymorphic Schema)
-    for i in range(1, 101):
-        cat = random.choice(categories)
+    # 1. Sinh sản phẩm (Polymorphic Schema)
+    for i in range(1, product_count + 1):
+        cat = CATEGORIES[(i - 1) % len(CATEGORIES)]
         if cat == "Điện tử":
             name = f"{random.choice(elec_names)} Gen {i}"
             price = random.randint(2000000, 25000000)
@@ -59,9 +104,9 @@ def seed_database():
             "category": cat,
             "price": price,
             "stock": random.randint(10, 100),
-            "image": f"product_{i}.jpg",
+            "image": catalog_image(name),
             "attributes": attributes,
-            "created_at": datetime.utcnow() - timedelta(days=random.randint(1, 30))
+            "created_at": now - timedelta(days=random.randint(1, 30))
         }
         products.append(product_doc)
 
@@ -70,11 +115,11 @@ def seed_database():
     product_ids = insert_result.inserted_ids
     print(f" Đã nạp thành công {len(product_ids)} sản phẩm vào collection 'sanpham'.")
 
-    # 2. Sinh 50 đơn hàng (Embedded Documents)
+    # 2. Sinh đơn hàng (Embedded Documents)
     orders = []
     customer_names = ["Nguyen Van A", "Tran Thi B", "Le Van C", "Pham Thi D", "Hoang Van E", "Vu Thị F"]
 
-    for i in range(1, 51):
+    for _ in range(order_count):
         # Chọn ngẫu nhiên từ 2 đến 5 sản phẩm cho mỗi đơn hàng
         num_items = random.randint(2, 5)
         chosen_products = random.sample(products, num_items)
@@ -90,7 +135,9 @@ def seed_database():
             total_amount += subtotal
 
             order_items.append({
-                "product_id": p.get("_id"),
+                "product_id": str(p["_id"]),
+                "category": p["category"],
+                "attributes": p["attributes"],
                 "name": p["name"],
                 "price_at_purchase": p["price"], # Lưu giá cố định tại thời điểm mua
                 "quantity": qty,
@@ -103,13 +150,26 @@ def seed_database():
             "total_amount": total_amount,
             "status": random.choice(["Processing", "Shipping", "Completed"]),
             "items": order_items, # Embedded mảng sản phẩm
-            "created_at": datetime.utcnow() - timedelta(days=random.randint(0, 10))
+            "created_at": now - timedelta(days=random.randint(0, 10))
         }
         orders.append(order_doc)
 
     db.hoadon.insert_many(orders)
+    seed_reviews(database_name)
     print(f" Đã nạp thành công {len(orders)} đơn hàng (có nhúng sản phẩm) vào collection 'hoadon'.")
     print(" Hoàn tất nạp toàn bộ dữ liệu mẫu!")
 
 if __name__ == "__main__":
-    seed_database()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--db", required=True, help="Database named ecommerce_demo_*")
+    parser.add_argument("--products", type=int, default=100)
+    parser.add_argument("--orders", type=int, default=50)
+    parser.add_argument("--reviews-only", action="store_true", help="Add reviews to existing demo products")
+    args = parser.parse_args()
+    try:
+        if args.reviews_only:
+            seed_reviews(args.db)
+        else:
+            seed_database(args.db, args.products, args.orders)
+    except ValueError as error:
+        parser.error(str(error))
