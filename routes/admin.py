@@ -90,7 +90,7 @@ def add_product():
     return render_template('admin/add_product.html')
 
 
-@admin_bp.route('/admin/products/delete/<product_id>', endpoint='delete_product')
+@admin_bp.route('/admin/products/delete/<product_id>', methods=['POST'], endpoint='delete_product')
 @admin_required
 def delete_product(product_id):
     try:

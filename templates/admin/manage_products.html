@@ -32,9 +32,9 @@
             <td class="text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</td>
             <td>{{ product.stock }}</td>
             <td class="text-end">
-              <a href="/admin/products/delete/{{ product._id }}" class="btn btn-outline-danger btn-sm rounded-pill" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                <i class="fa-solid fa-trash"></i>
-              </a>
+              <form method="post" action="{{ url_for('admin.delete_product', product_id=product._id) }}" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill" aria-label="Delete product"><i class="fa-solid fa-trash"></i></button>
+              </form>
             </td>
           </tr>
           {% endfor %}

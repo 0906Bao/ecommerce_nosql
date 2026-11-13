@@ -30,7 +30,8 @@ def login():
             '$or': [{'email': login_id}, {'phone': login_id}, {'username': login_id}]
         })
 
-        if user and check_password_hash(user['password'], password):
+        password_hash = (user.get('password') or user.get('password_hash')) if user else None
+        if password_hash and password and check_password_hash(password_hash, password):
             session['user'] = user.get('name', user.get('email', 'Khách hàng'))
             session['role'] = 'customer'
             session['user_id'] = str(user['_id'])
@@ -57,8 +58,7 @@ def register():
         is_email = '@' in login_contact
         user_data = {
             'name': name,
-            'email': login_contact if is_email else '',
-            'phone': login_contact if not is_email else '',
+            ('email' if is_email else 'phone'): login_contact,
             'password': generate_password_hash(password),
             'role': 'customer'
         }
