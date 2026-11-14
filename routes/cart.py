@@ -25,15 +25,16 @@ def view_cart():
     for raw_id, quantity in cart.items():
         product_id = clean_id(raw_id)
         product = None
+        projection = {'uploaded_image.data': 0}
         try:
-            product = db.sanpham.find_one({'_id': ObjectId(product_id)})
+            product = db.sanpham.find_one({'_id': ObjectId(product_id)}, projection)
         except Exception:
             pass
         if not product:
-            product = db.sanpham.find_one({'_id': product_id})
+            product = db.sanpham.find_one({'_id': product_id}, projection)
         if not product:
             try:
-                product = db.sanpham.find_one({'_id': int(product_id)})
+                product = db.sanpham.find_one({'_id': int(product_id)}, projection)
             except Exception:
                 pass
 

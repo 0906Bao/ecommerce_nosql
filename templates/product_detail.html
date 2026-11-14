@@ -16,7 +16,7 @@
       {% if image %}
       <div class="col-md-5">
         <img class="img-fluid rounded w-100" alt="{{ product.name }}"
-             src="{{ image if image.startswith(('https://', 'http://')) else url_for('static', filename='images/' ~ image) }}"
+             src="{{ image }}"
              onerror="this.parentElement.hidden = true">
       </div>
       {% endif %}
@@ -25,6 +25,7 @@
         <a href="{{ url_for('products.list_products', category=category) }}">{{ category }}</a>
         {% endif %}
         <h1 class="mt-2">{{ product.name }}</h1>
+        {% if product.get('product_type') %}<p class="text-muted mb-2">{{ product.product_type }}</p>{% endif %}
         {{ rating_summary(rating) }}
         <p class="small text-muted mb-2">Đã bán {{ sold }}</p>
         <p class="fs-3 fw-bold text-danger">{{ "{:,.0f}".format(product.get('price', 0) | float) }} đ</p>
@@ -42,13 +43,12 @@
       </div>
     </div>
     {% if product.get('attributes') %}
-    {% set labels = {'brand': 'Thương hiệu', 'cpu': 'CPU', 'ram': 'RAM', 'size': 'Kích thước', 'color': 'Màu sắc', 'material': 'Chất liệu', 'power': 'Công suất', 'origin': 'Xuất xứ', 'capacity': 'Dung tích', 'warranty_months': 'Bảo hành (tháng)'} %}
     <h2 class="h5 mt-4">Thông số sản phẩm</h2>
     <table class="table mb-0">
       <tbody>
         {% for key, value in product.attributes.items() %}
         <tr>
-          <th scope="row">{{ labels.get(key, key | replace('_', ' ') | title) }}</th>
+          <th scope="row">{{ 'Kích cỡ' if key == 'size' else field_labels.get(key, key | replace('_', ' ') | title) }}</th>
           <td>{{ value | join(', ') if value is sequence and value is not string and value is not mapping else value }}</td>
         </tr>
         {% endfor %}
@@ -76,6 +76,8 @@
       <textarea id="review-content" name="content" class="form-control mb-3" rows="3" maxlength="2000" required></textarea>
       <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
     </form>
+    {% elif session.get('role') == 'customer' %}
+    <p>Bạn cần mua sản phẩm này trước khi gửi đánh giá.</p>
     {% elif not session.get('user') %}
     <p><a href="{{ url_for('auth.login') }}">Đăng nhập</a> để gửi đánh giá.</p>
     {% endif %}
@@ -99,7 +101,13 @@
       {% for item in related_products %}
       <div class="col">
         <div class="card border-0 shadow-sm p-3 h-100">
-          <a href="{{ url_for('products.product_detail', product_id=item._id) }}">{{ item.name }}</a>
+          <a class="text-dark text-decoration-none fw-semibold" href="{{ url_for('products.product_detail', product_id=item._id) }}">
+            {% set image = product_image(item) %}
+            {% if image %}
+            <img src="{{ image }}" alt="" height="120" class="d-block w-100 object-fit-contain rounded mb-2" loading="lazy">
+            {% endif %}
+            {{ item.name }}
+          </a>
           <div class="text-danger fw-bold">{{ "{:,.0f}".format(item.get('price', 0) | float) }} đ</div>
         </div>
       </div>

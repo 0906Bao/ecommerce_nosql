@@ -29,8 +29,17 @@
                         {% for item in cart_items %}
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark">{{ item.product.name }}</div>
-                                <small class="text-muted">{{ item.product.category }}</small>
+                                <div class="d-flex align-items-center gap-3">
+                                    {% set image = product_image(item.product) %}
+                                    {% if image %}
+                                    <img src="{{ image }}" alt="{{ item.product.name }}" width="56" height="56"
+                                         class="rounded object-fit-contain flex-shrink-0" loading="lazy">
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ item.product.name }}</div>
+                                        <small class="text-muted">{{ item.product.category }}</small>
+                                    </div>
+                                </div>
                             </td>
                             <td class="text-danger fw-bold">{{ "{:,.0f}".format(item.product.price) }} đ</td>
                             <td>
