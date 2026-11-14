@@ -16,8 +16,10 @@ def create_indexes():
 
     db.hoadon.create_index([("created_at", DESCENDING)])
     db.hoadon.create_index([("items.product_id", ASCENDING)])
+    db.hoadon.create_index([("customer_id", ASCENDING), ("created_at", DESCENDING)])
     db.danhmuc.create_index([("ten", ASCENDING)], unique=True, sparse=True)
 
     db.reviews.create_index([("product_id", ASCENDING), ("created_at", DESCENDING)])
+    db.reviews.create_index([("user_id", ASCENDING), ("created_at", DESCENDING), ("_id", DESCENDING)])
 
     print("Đã tạo/kiểm tra các index cơ bản.")

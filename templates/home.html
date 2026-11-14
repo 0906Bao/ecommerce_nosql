@@ -13,6 +13,31 @@
     </div>
   </div>
 
+  {% if recommendations %}
+  <section class="mb-5" aria-labelledby="recommendations-title">
+    <h2 id="recommendations-title" class="h3 fw-bold mb-3">
+      {{ "Gợi ý cho bạn" if personalized else "Sản phẩm nổi bật" }}
+    </h2>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
+      {% for product in recommendations %}
+      <div class="col">
+        <a href="{{ url_for('products.product_detail', product_id=product._id) }}"
+           class="card h-100 shadow-sm text-decoration-none text-dark">
+          {% set image = product_image(product) %}
+          {% if image %}
+          <img src="{{ image }}" class="card-img-top object-fit-contain" height="140" alt="" loading="lazy">
+          {% endif %}
+          <div class="card-body">
+            <h3 class="h6">{{ product.name }}</h3>
+            <span class="text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</span>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <!-- Section: Các tính năng cốt lõi -->
   <div class="row row-cols-1 row-cols-md-3 g-4">
     <div class="col">
