@@ -1,12 +1,14 @@
 import os
 from flask import Flask, render_template
 from dotenv import load_dotenv
+from pymongo.errors import PyMongoError
 
 # Load biến môi trường đầu tiên
 load_dotenv()
 
 from database.connection import close_mongo
-from routes.auth import auth_bp
+from routes.auth import auth_bp, current_customer
+from routes.recommendations import recommend_products
 from routes.products import products_bp
 from routes.categories import categories_bp
 from routes.cart import cart_bp
@@ -33,7 +35,16 @@ def create_app():
 
     @app.get("/")
     def home():
-        return render_template("home.html", title="E-commerce đa ngành hàng")
+        try:
+            customer = current_customer()
+            recommendations, personalized = recommend_products(customer["_id"] if customer else None)
+        except PyMongoError:
+            app.logger.exception("Could not load homepage recommendations")
+            recommendations, personalized = [], False
+        return render_template(
+            "home.html", title="E-commerce đa ngành hàng",
+            recommendations=recommendations, personalized=personalized,
+        )
 
     @app.get("/health")
     def health():
