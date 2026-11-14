@@ -4,7 +4,7 @@ Khung project ban đầu cho đề tài sàn thương mại điện tử đa ng�
 
 ## Yêu cầu
 - Python 3.10+
-- MongoDB đang chạy cục bộ hoặc MongoDB Atlas
+- Quyền truy cập MongoDB Atlas (cluster `Cluster0` cho bản demo hiện tại)
 - MongoDB Compass (khuyến nghị để kiểm tra dữ liệu)
 
 ## Cài đặt trên Windows (PowerShell)
@@ -13,18 +13,25 @@ Khung project ban đầu cho đề tài sàn thương mại điện tử đa ng�
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Mở `.env` và đổi `FLASK_SECRET_KEY` thành chuỗi ngẫu nhiên dài trước khi sử dụng nghiêm túc.
 
-## Khởi tạo index
+## Kết nối dữ liệu MongoDB Atlas
 
-```powershell
-python -m scripts.init_db
+1. Trong MongoDB Atlas, mở project chứa `Cluster0`. Thêm IP của máy chạy Flask vào **IP Access List**. Trong **Database Access**, dùng một **Database User** có quyền đọc và ghi database `ecommerce_demo_bao_ve`.
+2. Tại `Cluster0`, chọn **Connect → Drivers and Client Libraries → Python** và sao chép chuỗi kết nối. Thay phần giữ chỗ bằng tài khoản Database User. Mã hóa URL các ký tự đặc biệt trong tên người dùng hoặc mật khẩu nếu có, ví dụ `@` thành `%40`.
+3. Trong file `.env` ở thư mục dự án, đặt hai biến sau bằng thông tin của cluster:
+
+```dotenv
+MONGO_URI=mongodb+srv://<db-user>:<db-password>@<atlas-host>/?retryWrites=true&w=majority
+MONGO_DB=ecommerce_demo_bao_ve
 ```
 
-Lệnh này kiểm tra kết nối MongoDB và tạo các index cơ bản. MongoDB phải đang chạy.
+Flask và các lệnh trong `scripts` đọc `MONGO_URI` để kết nối và `MONGO_DB` để chọn database. Nếu đã lưu chuỗi Atlas dưới `ATLAS_URI`, hãy dùng chuỗi đó làm giá trị của `MONGO_URI`. Biến môi trường đã đặt trong PowerShell được ưu tiên hơn `.env`. Khởi động lại Flask sau khi sửa cấu hình.
+
+Database demo hiện tại đã có dữ liệu và index. Để kiểm tra, mở **Cluster0 → Browse Collections → ecommerce_demo_bao_ve**. Bạn sẽ thấy các collection `sanpham`, `danhmuc`, `users`, `reviews` và `hoadon`. [Hướng dẫn kết nối Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/)
 
 ## Chạy ứng dụng
 
@@ -37,12 +44,12 @@ python app.py
 - Cửa hàng tại http://127.0.0.1:5000/products
 - Quản trị tại http://127.0.0.1:5000/admin/dashboard
 
-## Chuẩn bị database demo
+## Tạo database demo mới (tùy chọn)
 
-Khởi động MongoDB và kiểm tra `MONGO_URI` trong `.env`. Trong PowerShell, chọn tên database demo mới rồi chạy:
+Chỉ thực hiện phần này khi cần bộ dữ liệu riêng. Đặt `MONGO_DB` thành tên database trống và bảo đảm Database User có quyền trên database đó. Ví dụ cho phiên PowerShell hiện tại:
 
 ```powershell
-$env:MONGO_DB = "ecommerce_demo_bao_ve"
+$env:MONGO_DB = "ecommerce_demo_thu_nghiem"
 python -m scripts.init_db
 python -m scripts.seed_data --db $env:MONGO_DB --products 100 --orders 50
 python app.py

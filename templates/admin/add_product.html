@@ -10,10 +10,10 @@
       <a href="/admin/products" class="btn btn-outline-secondary rounded-pill">Quay lại</a>
     </div>
 
-    {% if error %}<p class="alert alert-danger">Kiểm tra tên, danh mục, giá và tồn kho.</p>{% endif %}
+    {% if error %}<p class="alert alert-danger">Kiểm tra tên, danh mục, loại sản phẩm, giá, tồn kho và số tháng bảo hành.</p>{% endif %}
+    {% if image_error %}<p class="alert alert-danger">Chọn ảnh JPEG, PNG hoặc WebP hợp lệ, tối đa 5 MB và 20 megapixel.</p>{% endif %}
     {% if not categories %}<p><a href="{{ url_for('categories.manage_categories') }}">Tạo danh mục trước khi lưu sản phẩm</a></p>{% endif %}
-    {% set attributes = product.get('attributes') or {} %}
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label fw-bold">Tên sản phẩm</label>
@@ -21,11 +21,16 @@
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">Danh mục</label>
-          <select name="category" class="form-select" required>
+          <select id="product-category" name="category" class="form-select" required>
             {% for category in categories %}
             <option value="{{ category }}"{% if product.get('category') == category %} selected{% endif %}>{{ category }}</option>
             {% endfor %}
           </select>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-bold" for="product-type">Loại sản phẩm</label>
+          <select id="product-type" name="product_type" class="form-select" required></select>
         </div>
 
         <div class="col-md-4">
@@ -37,8 +42,9 @@
           <input type="number" min="0" name="stock" value="{{ product.get('stock', '') }}" class="form-control" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label fw-bold">Ảnh</label>
-          <input type="text" name="image" value="{{ product.get('image', '') }}" class="form-control" placeholder="product_001.jpg">
+          <label class="form-label fw-bold" for="product-image">Ảnh</label>
+          <input type="file" id="product-image" name="image" class="form-control" accept="image/jpeg,image/png,image/webp">
+          <div class="form-text">JPEG, PNG hoặc WebP, tối đa 5 MB.{% if editing %} Để trống để giữ ảnh hiện tại.{% endif %}</div>
         </div>
 
         <div class="col-12">
@@ -46,32 +52,7 @@
           <textarea name="description" class="form-control" rows="3">{{ product.get('description', '') }}</textarea>
         </div>
 
-        <div class="col-md-6">
-          <label class="form-label fw-bold">CPU</label>
-          <input type="text" name="cpu" value="{{ attributes.get('cpu', '') }}" class="form-control" placeholder="Intel Core i5">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-bold">RAM</label>
-          <input type="text" name="ram" value="{{ attributes.get('ram', '') }}" class="form-control" placeholder="16GB">
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label fw-bold">Kích thước / Size</label>
-          <input type="text" name="size" value="{{ attributes.get('size', []) | join(', ') }}" class="form-control" placeholder="S, M, L">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-bold">Chất liệu</label>
-          <input type="text" name="material" value="{{ attributes.get('material', '') }}" class="form-control" placeholder="Cotton 100%">
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label fw-bold">Công suất</label>
-          <input type="text" name="power" value="{{ attributes.get('power', '') }}" class="form-control" placeholder="1200W">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-bold">Xuất xứ</label>
-          <input type="text" name="origin" value="{{ attributes.get('origin', '') }}" class="form-control" placeholder="Việt Nam">
-        </div>
+        <div id="product-attributes" class="row g-3 mx-0 px-0"></div>
       </div>
 
       <div class="d-grid mt-4">
@@ -82,4 +63,57 @@
     </form>
   </div>
 </div>
+<script>
+  const categorySelect = document.getElementById('product-category');
+  const typeSelect = document.getElementById('product-type');
+  const attributeFields = document.getElementById('product-attributes');
+  const types = {{ type_options | tojson }};
+  const labels = {{ field_labels | tojson }};
+  const initial = {{ [product.get('category'), product.get('product_type')] | tojson }};
+  const drafts = new Map([[JSON.stringify(initial), {{ field_values | tojson }}]]);
+
+  function renderFields() {
+    const fields = types[categorySelect.value]?.[typeSelect.value] || [];
+    const key = JSON.stringify([categorySelect.value, typeSelect.value]);
+    const values = drafts.get(key) || {};
+    attributeFields.replaceChildren();
+    for (const field of fields) {
+      const column = document.createElement('div');
+      column.className = 'col-md-6';
+      const label = document.createElement('label');
+      label.className = 'form-label fw-bold';
+      label.htmlFor = 'attribute-' + field;
+      label.textContent = labels[field];
+      const input = document.createElement('input');
+      input.id = label.htmlFor;
+      input.name = field;
+      input.className = 'form-control';
+      if (field === 'warranty_months') {
+        input.type = 'number';
+        input.min = '0';
+      }
+      const value = values[field] ?? '';
+      input.value = Array.isArray(value) ? value.join(', ') : value;
+      input.addEventListener('input', () => {
+        values[field] = input.value;
+        drafts.set(key, values);
+      });
+      column.append(label, input);
+      attributeFields.append(column);
+    }
+  }
+
+  function renderTypes(selected = '') {
+    typeSelect.replaceChildren(new Option('Chọn loại sản phẩm', ''));
+    for (const type of Object.keys(types[categorySelect.value] || {})) {
+      typeSelect.add(new Option(type, type));
+    }
+    typeSelect.value = Object.hasOwn(types[categorySelect.value] || {}, selected) ? selected : '';
+    renderFields();
+  }
+
+  categorySelect.addEventListener('change', () => renderTypes());
+  typeSelect.addEventListener('change', renderFields);
+  renderTypes(initial[1]);
+</script>
 {% endblock %}

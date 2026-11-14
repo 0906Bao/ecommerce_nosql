@@ -5,6 +5,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, s
 
 from database.connection import db
 from routes.auth import current_customer
+from routes.orders import has_purchased_product
 from routes.products import find_product
 
 reviews_bp = Blueprint("reviews", __name__, url_prefix="/reviews")
@@ -26,6 +27,11 @@ def add_review(product_id):
         abort(400)
 
     product = find_product(db.sanpham, product_id)
+    review_url = url_for("products.product_detail", product_id=product["_id"], _anchor="reviews")
+    if not has_purchased_product(customer["_id"], product["_id"]):
+        flash("Bạn cần mua sản phẩm này trước khi gửi đánh giá.", "review_error")
+        return redirect(review_url)
+
     rating = request.form.get("rating", type=int)
     content = request.form.get("content", "").strip()
     if rating not in range(1, 6) or not 1 <= len(content) <= 2000:
@@ -41,4 +47,4 @@ def add_review(product_id):
         })
         flash("Đã gửi đánh giá.", "review_success")
 
-    return redirect(url_for("products.product_detail", product_id=product["_id"], _anchor="reviews"))
+    return redirect(review_url)

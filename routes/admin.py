@@ -1,9 +1,12 @@
 from datetime import date, datetime, time, timedelta, timezone
 from math import isfinite
+from io import BytesIO
 
 from flask import Blueprint, abort, render_template, request, redirect, url_for
+from PIL import Image
 from routes.categories import category_names
 from database.connection import db
+from product_types import FIELDS, infer_product_type, product_type_options
 from routes.products import find_product
 from routes.auth import admin_required  # Import decorator phân quyền
 
@@ -100,35 +103,67 @@ def edit_product(product_id):
 
 
 def product_form(existing=None):
-    product = existing or {}
+    product = dict(existing or {})
     categories = category_names()
+    type_options = {category: product_type_options(category) for category in categories}
+    editing = existing is not None
+
+    def render_form(**errors):
+        field_values = {key: value for key, value in (product.get('attributes') or {}).items() if key in FIELDS}
+        return render_template('admin/add_product.html', product=product, categories=categories,
+                               editing=editing, type_options=type_options, field_labels=FIELDS,
+                               field_values=field_values, **errors)
+
     if request.method == 'GET':
-        return render_template('admin/add_product.html', product=product, categories=categories, editing=existing is not None)
+        if editing and not product.get('product_type'):
+            product['product_type'] = infer_product_type(product)
+        return render_form()
 
     product = {field: request.form.get(field, '').strip()
-               for field in ('name', 'category', 'price', 'stock', 'description', 'image')}
-    attributes = dict((existing or {}).get('attributes') or {})
-    for field in ('cpu', 'ram', 'material', 'power', 'origin'):
+               for field in ('name', 'category', 'product_type', 'price', 'stock', 'description')}
+    allowed_types = type_options.get(product['category'], {})
+    # Keep unrecognized legacy attributes when editing a product in the same type.
+    previous = existing or {}
+    previous_type = previous.get('product_type') or infer_product_type(previous)
+    same_type = previous.get('category') == product['category'] and previous_type == product['product_type']
+    attributes = {key: value for key, value in (previous.get('attributes') or {}).items()
+                  if same_type and (key not in FIELDS or key == 'brand')}
+    product['attributes'] = attributes
+    for field in allowed_types.get(product['product_type'], ()):
         value = request.form.get(field, '').strip()
         if value:
-            attributes[field] = value
-        else:
-            attributes.pop(field, None)
-    sizes = [size.strip() for size in request.form.get('size', '').split(',') if size.strip()]
-    if sizes:
-        attributes['size'] = sizes
-    else:
-        attributes.pop('size', None)
-    product['attributes'] = attributes
+            attributes[field] = [size.strip() for size in value.split(',') if size.strip()] if field == 'size' else value
 
     try:
         price = float(product['price'])
         stock = int(product['stock'])
-        if not product['name'] or product['category'] not in categories or not isfinite(price) or price < 0 or not 0 <= stock < 2**63:
+        if not product['name'] or product['product_type'] not in allowed_types or not isfinite(price) or price < 0 or not 0 <= stock < 2**63:
             raise ValueError
+        if 'warranty_months' in attributes:
+            warranty = int(attributes['warranty_months'])
+            if not 0 <= warranty < 2**63:
+                raise ValueError
+            attributes['warranty_months'] = warranty
     except ValueError:
-        return render_template('admin/add_product.html', product=product, categories=categories,
-                               editing=existing is not None, error=True), 400
+        return render_form(error=True), 400
+
+    upload = request.files.get('image')
+    if upload and upload.filename:
+        limit = 5 * 1024 * 1024
+        data = upload.stream.read(limit + 1)
+        try:
+            if len(data) > limit:
+                raise ValueError
+            with Image.open(BytesIO(data), formats=('JPEG', 'PNG', 'WEBP')) as image:
+                if image.width * image.height > 20_000_000:
+                    raise ValueError
+                mime = Image.MIME[image.format]
+                image.verify()
+            with Image.open(BytesIO(data), formats=('JPEG', 'PNG', 'WEBP')) as image:
+                image.load()
+        except (OSError, SyntaxError, ValueError, Image.DecompressionBombError):
+            return render_form(image_error=True), 400
+        product['uploaded_image'] = {'data': data, 'mime': mime}
 
     product.update(price=price, stock=stock)
     if existing is None:

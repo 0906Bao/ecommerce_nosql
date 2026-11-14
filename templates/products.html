@@ -18,13 +18,13 @@
         </h5>
         <div class="list-group list-group-flush">
           <!-- Nút xem tất cả sản phẩm -->
-          <a href="/products" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 fw-bold {% if not selected_category %}active bg-primary text-white{% else %}text-dark{% endif %}">
+          <a href="{{ url_for('products.list_products', **link_filters) }}" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 fw-bold {% if not selected_category %}active bg-primary text-white{% else %}text-dark{% endif %}">
             <i class="fa-solid fa-border-all me-2"></i> Tất cả sản phẩm
           </a>
 
           <!-- Vòng lặp hiển thị các danh mục động từ MongoDB -->
           {% for cat in categories %}
-          <a href="/products?category={{ cat }}" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 fw-bold {% if selected_category == cat %}active bg-primary text-white{% else %}text-dark{% endif %}">
+          <a href="{{ url_for('products.list_products', category=cat, **link_filters) }}" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 fw-bold {% if selected_category == cat %}active bg-primary text-white{% else %}text-dark{% endif %}">
             <i class="fa-solid fa-angle-right me-2 small"></i> {{ cat }}
           </a>
           {% endfor %}
@@ -34,7 +34,62 @@
 
     <!-- CỘT BÊN PHẢI: HIỂN THỊ DANH SÁCH SẢN PHẨM -->
     <div class="col-lg-9">
+      <form method="get" action="{{ url_for('products.list_products') }}" class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+        {% if search_keyword %}<input type="hidden" name="q" value="{{ search_keyword }}">{% endif %}
+        <div class="row g-3 align-items-end">
+          <div class="col-sm-4 col-lg-3">
+            <label class="form-label" for="product_type">Loại sản phẩm</label>
+            <select class="form-select" id="product_type" name="product_type">
+              <option value="">Tất cả loại</option>
+              {% for category, options in type_options.items() %}
+              <optgroup label="{{ category }}">
+                {% for kind in options if kind != 'Khác' %}
+                <option value="{{ kind }}" {% if selected_type == kind %}selected{% endif %}>{{ kind }}</option>
+                {% endfor %}
+              </optgroup>
+              {% endfor %}
+              <option value="Khác" {% if selected_type == 'Khác' %}selected{% endif %}>Khác</option>
+            </select>
+          </div>
+          <div class="col-sm-4 col-lg-3">
+            <label class="form-label" for="price_range">Khoảng giá</label>
+            <select class="form-select" id="price_range" name="price_range">
+              <option value="">Tất cả mức giá</option>
+              {% for value, (label, bounds) in price_ranges.items() %}
+              <option value="{{ value }}" {% if filters.get('price_range') == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-4 col-lg-3">
+            <label class="form-label" for="min_rating">Đánh giá từ</label>
+            <select class="form-select" id="min_rating" name="min_rating">
+              <option value="">Tất cả</option>
+              {% for stars in range(1, 6) %}
+              <option value="{{ stars }}" {% if filters.get('min_rating') == stars %}selected{% endif %}>{{ stars }} sao</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-4 col-lg-3">
+            <label class="form-label" for="sort">Sắp xếp</label>
+            <select class="form-select" id="sort" name="sort">
+              <option value="">Mặc định</option>
+              {% for field, label in [('price', 'Giá'), ('rating', 'Đánh giá'), ('sold', 'Lượt bán')] %}
+                {% for direction, order in [('asc', 'thấp đến cao'), ('desc', 'cao đến thấp')] %}
+                {% set option = field ~ '_' ~ direction %}
+                <option value="{{ option }}" {% if filters.get('sort') == option %}selected{% endif %}>{{ label }} · {{ order }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-3 d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" type="submit">Áp dụng</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('products.list_products', category=selected_category, q=search_keyword or none) }}">Đặt lại</a>
+          </div>
+        </div>
+      </form>
       {% if products %}
+      <p class="text-muted small">{{ total }} sản phẩm · Trang {{ page }}/{{ pages }}</p>
       <div class="row g-4">
         {% for product in products %}
         <div class="col-md-4">
@@ -44,7 +99,7 @@
             <a href="{{ url_for('products.product_detail', product_id=product._id) }}">
               <img class="card-img-top rounded-top-4 object-fit-contain" height="180" loading="lazy"
                    alt="{{ product.name }}"
-                   src="{{ image if image.startswith(('https://', 'http://')) else url_for('static', filename='images/' ~ image) }}"
+                   src="{{ image }}"
                    onerror="this.parentElement.hidden = true">
             </a>
             {% endif %}
@@ -55,7 +110,7 @@
                                 </span>
               </div>
               <h5 class="fw-bold mb-2">
-                <a class="text-dark" href="{{ url_for('products.product_detail', product_id=product._id) }}">{{ product.name }}</a>
+                <a class="text-dark text-decoration-none" href="{{ url_for('products.product_detail', product_id=product._id) }}">{{ product.name }}</a>
               </h5>
               {{ rating_summary(ratings.get(product._id)) }}
         <p class="small text-muted mb-2">Đã bán {{ sold_counts.get(product._id | string, 0) }}</p>
@@ -72,11 +127,24 @@
         </div>
         {% endfor %}
       </div>
+      {% if pages > 1 %}
+      <nav class="mt-4" aria-label="Phân trang sản phẩm">
+        <ul class="pagination justify-content-center">
+          {% if page > 1 %}
+          <li class="page-item"><a class="page-link" href="{{ url_for('products.list_products', page=page-1, **page_filters) }}">Trước</a></li>
+          {% endif %}
+          <li class="page-item active"><span class="page-link" aria-current="page">{{ page }} / {{ pages }}</span></li>
+          {% if page < pages %}
+          <li class="page-item"><a class="page-link" href="{{ url_for('products.list_products', page=page+1, **page_filters) }}">Sau</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
       {% else %}
       <!-- Thông báo khi không tìm thấy sản phẩm trong danh mục -->
       <div class="text-center py-5 bg-white rounded-4 shadow-sm">
         <div class="display-4 text-muted mb-2"><i class="fa-solid fa-box-open"></i></div>
-        <h5 class="text-muted">Không có sản phẩm nào trong danh mục này.</h5>
+        <h5 class="text-muted">Không có sản phẩm nào phù hợp.</h5>
         <a href="/products" class="btn btn-outline-primary btn-sm rounded-pill px-4 mt-2 fw-bold">Xem tất cả sản phẩm</a>
       </div>
       {% endif %}
