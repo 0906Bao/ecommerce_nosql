@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <a href="{{ url_for('admin.list_invoices') }}" class="btn btn-outline-secondary btn-sm mb-3">Về danh sách hóa đơn</a>
+  <h1 class="h3 fw-bold text-break mb-3">Hóa đơn {{ order._id }}</h1>
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Thời gian đặt</dt><dd class="col-sm-9">{{ order.created_at | invoice_datetime }}</dd>
+      <dt class="col-sm-3">Khách hàng</dt><dd class="col-sm-9">{{ order.customer_name or '—' }}</dd>
+      <dt class="col-sm-3">Số điện thoại</dt><dd class="col-sm-9">{{ order.phone or '—' }}</dd>
+      <dt class="col-sm-3">Địa chỉ giao hàng</dt><dd class="col-sm-9">{{ order.address or order.shipping_address or '—' }}</dd>
+    </dl>
+  </div>
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr><th scope="col">Sản phẩm</th><th scope="col" class="text-end">Số lượng</th><th scope="col" class="text-end">Đơn giá</th><th scope="col" class="text-end">Thành tiền</th></tr>
+        </thead>
+        <tbody>
+          {% for item in order['items'] %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td class="text-end">{{ item.quantity }}</td>
+            <td class="text-end text-nowrap">{{ "{:,.0f}".format(item.price_at_purchase) }} đ</td>
+            <td class="text-end text-nowrap">{{ "{:,.0f}".format(item.subtotal) }} đ</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><th scope="row" colspan="3">Tổng tiền</th><td class="text-end text-nowrap fw-bold">{{ "{:,.0f}".format(order.total_amount) }} đ</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

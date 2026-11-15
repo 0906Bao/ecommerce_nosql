@@ -1,4 +1,59 @@
 {% extends "base.html" %}
+{% macro chart(title, rows, field, unit, color, description) %}
+<section class="card border-0 shadow-sm rounded-4 p-4 h-100">
+  <h3 class="h5 fw-bold mb-1">{{ title }}</h3>
+  {% if description %}<p class="small text-muted mb-0">{{ description }}</p>{% endif %}
+  {% if rows %}
+  {% set maximum = rows | map(attribute=field) | max %}
+  <div class="overflow-auto mt-3">
+  <ul class="list-unstyled d-flex gap-2 mb-0" style="min-width: {{ rows | length * 76 }}px">
+    {% for row in rows %}
+    {% set value = row[field] %}
+    <li class="text-center small" style="flex: 1 1 0; min-width: 0">
+      <div class="d-flex flex-column justify-content-end align-items-center border-bottom" style="height: 160px">
+        <span class="fw-semibold text-break">{{ "{:,.0f}".format(value) | replace(',', '.') }} {{ unit }}</span>
+        <div class="rounded-top {{ color }}" style="width: 55%; height: {{ [value / maximum * 70, 0] | max if maximum > 0 else 0 }}%" aria-hidden="true"></div>
+      </div>
+      <div class="mt-1 text-break">{{ row._id }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">Chưa có dữ liệu trong khoảng đã chọn.</p>
+  {% endif %}
+</section>
+{% endmacro %}
+{% macro pie_chart(title, categories) %}
+<section class="card border-0 shadow-sm rounded-4 p-4">
+  <h3 class="h5 fw-bold mb-3">{{ title }}</h3>
+  {% set total_sold = categories | sum(attribute='total_sold') %}
+  {% if total_sold > 0 %}
+  {% set colors = ['#0d6efd', '#198754', '#fd7e14', '#6f42c1', '#d63384', '#6c757d'] %}
+  {% set pie = namespace(sold=0, slices=[]) %}
+  {% for category in categories %}
+    {% set start_percent = pie.sold / total_sold * 100 %}
+    {% set pie.sold = pie.sold + category.total_sold %}
+    {% set end_percent = pie.sold / total_sold * 100 %}
+    {% set pie.slices = pie.slices + [(colors[loop.index0] if loop.index0 < colors | length else 'hsl(' ~ (loop.index0 * 137 % 360) ~ ' 65% 40%)') ~ ' ' ~ start_percent ~ '% ' ~ end_percent ~ '%'] %}
+  {% endfor %}
+  <div class="d-flex flex-column flex-sm-row align-items-center gap-4">
+    <div class="rounded-circle flex-shrink-0" aria-hidden="true" style="width: min(100%, 210px); aspect-ratio: 1; background: conic-gradient({{ pie.slices | join(', ') }})"></div>
+    <ul class="list-unstyled mb-0">
+      {% for category in categories %}
+      <li class="d-flex align-items-baseline gap-2 mb-2">
+        <span class="rounded-circle flex-shrink-0" aria-hidden="true" style="width: 12px; height: 12px; background-color: {{ (colors[loop.index0] if loop.index0 < colors | length else 'hsl(' ~ (loop.index0 * 137 % 360) ~ ' 65% 40%)') }}"></span>
+        <span class="text-break">{{ category._id }}</span>
+        <strong class="text-nowrap">{{ "%.1f" | format(category.total_sold / total_sold * 100) | replace('.', ',') }}%</strong>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">Chưa có dữ liệu trong khoảng đã chọn.</p>
+  {% endif %}
+</section>
+{% endmacro %}
 {% block content %}
 <div class="container py-4">
   <!-- Header -->
@@ -7,16 +62,21 @@
       <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Trang Quản Trị & Báo Cáo</h2>
       <p class="text-muted mb-0">Thống kê doanh thu và phân tích dữ liệu thời gian thực với MongoDB Aggregation</p>
     </div>
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+    <a href="{{ url_for('admin.list_invoices') }}" class="btn btn-primary rounded-pill px-4 fw-bold">
+      <i class="fa-solid fa-receipt me-1"></i> Xem hóa đơn
+    </a>
     <a href="/products" class="btn btn-outline-primary rounded-pill px-4 fw-bold">
       <i class="fa-solid fa-store me-1"></i> Xem cửa hàng
     </a>
+    </div>
   </div>
 
   <form method="get" class="row g-2 align-items-end mb-4">
     <div class="col-auto"><label for="start">Từ ngày</label><input class="form-control" type="date" id="start" name="start" value="{{ start }}"></div>
     <div class="col-auto"><label for="end">Đến ngày</label><input class="form-control" type="date" id="end" name="end" value="{{ end }}"></div>
     <div class="col-auto">
-      <label for="period">Nhóm doanh thu theo</label>
+      <label for="period">Nhóm báo cáo theo</label>
       <select class="form-select" id="period" name="period">
         <option value="day"{% if period == 'day' %} selected{% endif %}>Ngày</option>
         <option value="month"{% if period == 'month' %} selected{% endif %}>Tháng</option>
@@ -24,10 +84,9 @@
     </div>
     <div class="col-auto"><button class="btn btn-primary" type="submit">Lọc báo cáo</button></div>
   </form>
-  <!-- 3 Thẻ Thống kê tổng quan (Cards) -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white">
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Doanh Thu</h6>
@@ -38,8 +97,8 @@
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm rounded-4 p-4 bg-success text-white">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-success text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Đơn Hàng</h6>
@@ -50,8 +109,8 @@
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm rounded-4 p-4 bg-warning text-dark">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-warning text-dark">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="text-uppercase small opacity-75 fw-bold mb-1">Tổng Sản Phẩm</h6>
@@ -61,6 +120,35 @@
         </div>
       </div>
     </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-uppercase small text-muted fw-bold mb-1">Giá trị đơn trung bình</h6>
+            <h3 class="fw-bold mb-0">{{ "{:,.0f}".format(average_order_value) }} đ</h3>
+          </div>
+          <div class="fs-1 text-primary opacity-50"><i class="fa-solid fa-calculator"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% set time_description = 'Tối đa 12 ' ~ ('ngày' if period == 'day' else 'tháng') ~ ' gần nhất trong báo cáo' %}
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      {{ chart('Biến động doanh thu', chart_periods, 'total_revenue', 'đ', 'bg-primary', time_description) }}
+    </div>
+    <div class="col-12">
+      {{ chart('Số đơn hàng', chart_periods, 'orders', 'đơn', 'bg-success', time_description) }}
+    </div>
+    <div class="col-12">
+      {{ pie_chart('Danh mục bán chạy', top_categories) }}
+    </div>
+    {% for category, types in category_type_charts.items() %}
+    <div class="col-12">
+      {{ pie_chart('Loại hàng bán chạy trong danh mục ' ~ category, types) }}
+    </div>
+    {% endfor %}
   </div>
 
   <div class="card p-4 mb-4">

@@ -1,7 +1,9 @@
+from collections import Counter, defaultdict
 from datetime import date, datetime, time, timedelta, timezone
 from math import isfinite
 from io import BytesIO
 
+from bson import ObjectId
 from flask import Blueprint, abort, render_template, request, redirect, url_for
 from PIL import Image
 from routes.categories import category_names
@@ -11,6 +13,42 @@ from routes.products import find_product
 from routes.auth import admin_required  # Import decorator phân quyền
 
 admin_bp = Blueprint('admin', __name__)
+
+
+@admin_bp.app_template_filter('invoice_datetime')
+def invoice_datetime(value):
+    if not isinstance(value, datetime):
+        return '—'
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone(timedelta(hours=7))).strftime('%d/%m/%Y %H:%M')
+
+
+@admin_bp.get('/admin/orders')
+@admin_required
+def list_invoices():
+    page = request.args.get('page', 1, type=int)
+    page_size = 20
+    if not 1 <= page <= 2**31 - 1:
+        abort(404)
+    orders = list(db.hoadon.find({}, {'items': 0, 'address': 0, 'shipping_address': 0})
+                  .sort([('created_at', -1), ('_id', -1)])
+                  .skip((page - 1) * page_size).limit(page_size + 1))
+    if page > 1 and not orders:
+        abort(404)
+    return render_template('admin/invoices.html', orders=orders[:page_size],
+                           page=page, has_next=len(orders) > page_size)
+
+
+@admin_bp.get('/admin/orders/<order_id>')
+@admin_required
+def invoice_detail(order_id):
+    order = db.hoadon.find_one({'_id': ObjectId(order_id)}) if ObjectId.is_valid(order_id) else None
+    if order is None:
+        order = db.hoadon.find_one({'_id': order_id})
+    if order is None:
+        abort(404)
+    return render_template('admin/invoice_detail.html', order=order)
 
 
 @admin_bp.route('/admin/', endpoint='dashboard_root')
@@ -57,6 +95,65 @@ def admin_dashboard():
         {'$sort': {'_id': 1}},
     ]))
     total_revenue = sum(row['total_revenue'] for row in revenue_by_period)
+    chart_periods = []
+    if revenue_by_period or end:
+        last_day = date.fromisoformat(end or (revenue_by_period[-1]['_id'] + ('-01' if period == 'month' else '')))
+        first_day = date.fromisoformat(start) if start else date.min
+        if period == 'month':
+            last_day = last_day.replace(day=1)
+            first_day = first_day.replace(day=1)
+        rows_by_period = {row['_id']: row for row in revenue_by_period}
+        for _ in range(12):
+            if last_day < first_day:
+                break
+            label = last_day.isoformat()[:7] if period == 'month' else last_day.isoformat()
+            chart_periods.append(rows_by_period.get(label, {'_id': label, 'orders': 0, 'total_revenue': 0}))
+            if last_day == date.min:
+                break
+            previous_day = last_day - timedelta(days=1)
+            last_day = previous_day.replace(day=1) if period == 'month' else previous_day
+        chart_periods.reverse()
+
+    sales_by_category = defaultdict(Counter)
+    for row in db.hoadon.aggregate([
+        match,
+        {'$unwind': '$items'},
+        {'$group': {
+            '_id': {
+                'category': '$items.category',
+                'product_type': '$items.product_type',
+                'name': {'$cond': [
+                    {'$ifNull': ['$items.product_type', False]}, None, '$items.name'
+                ]},
+            },
+            'total_sold': {'$sum': '$items.quantity'},
+        }},
+        {'$match': {'total_sold': {'$gt': 0}}},
+    ]):
+        item = row['_id']
+        category = item.get('category') or 'Chưa phân loại'
+        product_type = item.get('product_type') or infer_product_type(item)
+        sales_by_category[category][product_type] += row['total_sold']
+
+    category_sales = sorted(
+        ({'_id': category, 'total_sold': sum(types.values())}
+         for category, types in sales_by_category.items()),
+        key=lambda row: (-row['total_sold'], row['_id']),
+    )
+    category_type_charts = {
+        category['_id']: [
+            {'_id': product_type, 'total_sold': sold}
+            for product_type, sold in sorted(
+                sales_by_category[category['_id']].items(),
+                key=lambda entry: (-entry[1], entry[0]),
+            )
+        ]
+        for category in category_sales
+    }
+    top_categories = category_sales[:5]
+    other_sales = sum(row['total_sold'] for row in category_sales[5:])
+    if other_sales > 0:
+        top_categories.append({'_id': 'Các danh mục còn lại', 'total_sold': other_sales})
 
     top_products = list(db.hoadon.aggregate([
         match,
@@ -78,6 +175,10 @@ def admin_dashboard():
         total_products=total_products,
         total_revenue=total_revenue,
         revenue_by_period=revenue_by_period,
+        chart_periods=chart_periods,
+        top_categories=top_categories,
+        category_type_charts=category_type_charts,
+        average_order_value=total_revenue / total_orders if total_orders else 0,
         start=start, end=end, period=period,
         top_products=top_products
     )
