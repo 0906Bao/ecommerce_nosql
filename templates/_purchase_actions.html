@@ -1,0 +1,11 @@
+{% macro purchase_actions(product, return_to) %}
+{% set available = product.get('stock', 0) | int > 0 %}
+<form method="post" action="{{ url_for('cart.add_to_cart', product_id=product._id) }}" class="d-flex flex-wrap gap-2" data-purchase-actions>
+  <input type="hidden" name="return_to" value="{{ return_to }}">
+  <button type="submit" name="action" value="buy" class="btn btn-primary btn-sm rounded-pill fw-bold"{% if not available %} disabled{% endif %}>Mua ngay</button>
+  <button type="submit" name="action" value="add" class="btn btn-outline-primary btn-sm rounded-pill fw-bold"{% if not available %} disabled{% endif %}>
+    <i class="fa-solid fa-cart-plus me-1" aria-hidden="true"></i>Thêm vào giỏ hàng
+  </button>
+  <span class="w-100 small" data-cart-status role="status" hidden></span>
+</form>
+{% endmacro %}

@@ -6,6 +6,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import PyMongoError
 from werkzeug.exceptions import NotFound
 from routes.products import find_product
+from product_types import infer_product_type
 from datetime import datetime, timezone
 
 cart_bp = Blueprint('cart', __name__)
@@ -65,7 +66,17 @@ def add_to_cart(product_id):
         cart[clean_product_id] = 1
 
     session['cart'] = cart
-    session.modified = True  # Bắt buộc để lưu session
+    if request.form.get('action') == 'add':
+        if request.accept_mimetypes.best == 'application/json':
+            return {'cart_count': sum(cart.values())}
+        return_to = request.form.get('return_to', '')
+        if return_to.partition('?')[0] in (
+            url_for('products.list_products'),
+            url_for('products.product_detail', product_id=clean_product_id),
+        ):
+            return redirect(return_to)
+        return redirect(url_for('products.list_products'))
+
     return redirect(url_for('cart.view_cart'))
 
 @cart_bp.route('/cart/decrease/<product_id>')
@@ -149,6 +160,7 @@ def checkout():
                 'product_id': str(product_id),
                 'name': product['name'],
                 'category': product.get('category'),
+                'product_type': product.get('product_type') or infer_product_type(product),
                 'attributes': product.get('attributes', {}),
                 'price_at_purchase': product['price'],
                 'quantity': quantity,

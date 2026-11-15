@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_rating.html" import rating_summary %}
+{% from "_purchase_actions.html" import purchase_actions %}
 {% block content %}
 <div class="container py-4">
   <nav aria-label="Đường dẫn">
@@ -34,12 +35,10 @@
         {% set stock = product.get('stock', 0) | int %}
         {% if stock > 0 %}
         <p class="text-success">Còn {{ stock }} sản phẩm</p>
-        <form method="post" action="{{ url_for('cart.add_to_cart', product_id=product._id) }}">
-          <button type="submit" class="btn btn-primary">Thêm vào giỏ hàng</button>
-        </form>
         {% else %}
         <p class="text-danger">Hết hàng</p>
         {% endif %}
+        {{ purchase_actions(product, url_for('products.product_detail', product_id=product._id)) }}
       </div>
     </div>
     {% if product.get('attributes') %}

@@ -10,6 +10,7 @@
 
   <!-- FontAwesome Icons CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="{{ url_for('static', filename='js/cart.js') }}" defer></script>
 </head>
 <body class="bg-light">
 
@@ -49,6 +50,7 @@
             {% if session.get('role') == 'admin' %}
             <li><a class="dropdown-item fw-bold text-warning" href="/admin/dashboard"><i class="fa-solid fa-chart-line me-2"></i>Dashboard</a></li>
             <li><a class="dropdown-item fw-bold text-info" href="/admin/products"><i class="fa-solid fa-boxes-stacked me-2"></i>Quản lý sản phẩm</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.list_invoices') }}"><i class="fa-solid fa-receipt me-2"></i>Hóa đơn</a></li>
             <li><hr class="dropdown-divider"></li>
             {% endif %}
             <li><a class="dropdown-item text-danger fw-bold" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất</a></li>
@@ -60,8 +62,12 @@
         </a>
         {% endif %}
 
-        <a href="/cart" class="btn btn-dark btn-sm rounded-pill px-3 ms-2 text-white shadow-sm">
-          <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng
+        {% set cart_count = session.get('cart', {}).values() | sum %}
+        <a href="{{ url_for('cart.view_cart') }}" class="btn btn-dark btn-sm rounded-pill px-3 ms-2 text-white shadow-sm text-nowrap" data-cart-link aria-label="Giỏ hàng, {{ cart_count }} sản phẩm">
+          <span class="position-relative d-inline-block me-1" aria-hidden="true">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light px-1 py-0{% if not cart_count %} d-none{% endif %}" data-cart-count style="font-size: .65rem">{{ cart_count }}</span>
+          </span> Giỏ hàng
         </a>
       </div>
     </div>
