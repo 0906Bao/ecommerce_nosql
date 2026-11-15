@@ -67,10 +67,10 @@ Lệnh này bổ sung cho sản phẩm có dưới 3 đánh giá và giữ các 
 
 ## Chạy thử demo
 
-1. Mở `/health` và kiểm tra HTTP 200. Đăng nhập bằng tài khoản demo `admin` / `123456`.
+1. Mở `/health` và kiểm tra HTTP 200. Đặt `ADMIN_PASSWORD` trong `.env` khi chạy cục bộ hoặc trong phần biến môi trường của dịch vụ khi deploy, rồi khởi động lại app. Đăng nhập bằng tên `admin` và mật khẩu đã đặt. Nếu biến này chưa được đặt hoặc để trống, đăng nhập quản trị bị vô hiệu hóa.
 2. Mở `/categories/manage`. Tạo danh mục, đổi tên khi danh mục còn trống, rồi tạo sản phẩm thuộc danh mục đó ở `/admin/products`.
 3. Mở cửa hàng, thêm sản phẩm vào giỏ và đặt hàng. Kiểm tra `hoadon.items.price_at_purchase` trong MongoDB Compass.
 4. Sửa giá sản phẩm và kiểm tra lại hóa đơn vừa tạo. Đơn giá và thành tiền trên hóa đơn phải giữ nguyên. Xóa sản phẩm, sau đó xóa danh mục.
 5. Mở dashboard, chọn khoảng ngày và thử nhóm theo ngày hoặc tháng. Kiểm tra số đơn, doanh thu và Top 5 trong cùng khoảng. Dashboard dùng múi giờ Việt Nam và tính tổng giá trị đơn đã tạo.
 
-Không đưa `.env` thật lên Git. Tài khoản quản trị mặc định chỉ dùng cho demo cục bộ.
+Không đưa `.env` thật lên Git. Dùng mật khẩu quản trị ngẫu nhiên, riêng cho môi trường deploy.

@@ -1,3 +1,4 @@
+import os
 from hmac import compare_digest
 from secrets import token_hex
 
@@ -24,8 +25,10 @@ def login():
         login_id = request.form.get('login_id')  # Email, SĐT hoặc username
         password = request.form.get('password')
 
-        # 1. Kiểm tra tài khoản Admin mẫu
-        if login_id == 'admin' and password == '123456':
+        admin_password = os.getenv('ADMIN_PASSWORD')
+        if login_id == 'admin' and admin_password and password and compare_digest(
+            password.encode('utf-8'), admin_password.encode('utf-8')
+        ):
             session['user'] = 'Quản trị viên'
             session['role'] = 'admin'
             session.pop('user_id', None)
