@@ -31,7 +31,7 @@ def create_app():
     app.register_blueprint(orders_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(reviews_bp)
-    app.register_blueprint(info_bp)  # <--- 2. Đăng ký info_bp tại đây
+    app.register_blueprint(info_bp)
 
     @app.get("/")
     def home():

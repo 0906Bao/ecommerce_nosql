@@ -1,4 +1,5 @@
 from secrets import token_hex
+from unicodedata import category as unicode_category, normalize
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -60,6 +61,11 @@ def sold_quantities(product_ids):
     }
 
 
+def normalize_search_text(value):
+    decomposed = normalize('NFD', value.casefold().replace('đ', 'd'))
+    return ''.join(char for char in decomposed if unicode_category(char) != 'Mn')
+
+
 @products_bp.route('/products')
 def list_products():
     selected_category = request.args.get('category')
@@ -77,10 +83,6 @@ def list_products():
     query = {}
     if selected_category:
         query['category'] = selected_category
-
-    # Xử lý tìm kiếm sản phẩm theo tên (không phân biệt hoa thường với $regex)
-    if search_keyword:
-        query['name'] = {'$regex': search_keyword, '$options': 'i'}
 
     filters = {}
     for field in ('min_price', 'max_price', 'min_sold', 'max_sold', 'min_rating'):
@@ -103,6 +105,12 @@ def list_products():
         query['price'] = price_range
 
     products = list(db.sanpham.find(query, {'uploaded_image.data': 0}).sort('_id', 1))
+    if search_keyword:
+        normalized_keyword = normalize_search_text(search_keyword)
+        products = [
+            product for product in products
+            if normalized_keyword in normalize_search_text(product.get('name', ''))
+        ]
     if selected_type:
         products = [
             product for product in products
