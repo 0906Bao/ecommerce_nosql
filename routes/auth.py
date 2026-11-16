@@ -56,6 +56,10 @@ def register():
         name = request.form.get('name')
         login_contact = request.form.get('login_contact')  # Email hoặc SĐT
         password = request.form.get('password')
+        if not password or password != request.form.get('confirm_password'):
+            return render_template(
+                'register.html', error="Vui lòng nhập mật khẩu và xác nhận mật khẩu trùng khớp!"
+            )
 
         existing_user = db.users.find_one({
             '$or': [{'email': login_contact}, {'phone': login_contact}]

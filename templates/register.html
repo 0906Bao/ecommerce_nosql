@@ -22,8 +22,22 @@
                 <input type="text" name="login_contact" class="form-control" required placeholder="Nhập email hoặc số điện thoại...">
             </div>
             <div class="mb-3">
-                <label class="form-label fw-bold small">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required placeholder="Tạo mật khẩu bảo mật...">
+                <label for="password" class="form-label fw-bold small">Mật khẩu</label>
+                <div class="input-group">
+                    <input id="password" type="password" name="password" class="form-control" autocomplete="new-password" required placeholder="Tạo mật khẩu bảo mật...">
+                    <button type="button" class="btn btn-outline-secondary" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label fw-bold small">Xác nhận mật khẩu</label>
+                <div class="input-group">
+                    <input id="confirm_password" type="password" name="confirm_password" class="form-control" autocomplete="new-password" required placeholder="Nhập lại mật khẩu...">
+                    <button type="button" class="btn btn-outline-secondary" data-password-toggle aria-controls="confirm_password" aria-label="Hiện mật khẩu xác nhận">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-success w-100 py-2 fw-bold rounded-pill shadow-sm mt-2">
                 <i class="fa-solid fa-check me-1"></i> Đăng Ký Ngay
@@ -35,4 +49,19 @@
         </div>
     </div>
 </div>
+<script>
+    document.querySelectorAll('[data-password-toggle]').forEach(button => {
+        const input = document.getElementById(button.getAttribute('aria-controls'));
+        const icon = button.querySelector('i');
+        const showLabel = button.getAttribute('aria-label');
+
+        button.addEventListener('click', () => {
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            icon.classList.toggle('fa-eye', !show);
+            icon.classList.toggle('fa-eye-slash', show);
+            button.setAttribute('aria-label', show ? showLabel.replace('Hiện', 'Ẩn') : showLabel);
+        });
+    });
+</script>
 {% endblock %}
