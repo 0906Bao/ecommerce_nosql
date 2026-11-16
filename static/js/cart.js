@@ -33,6 +33,11 @@ document.addEventListener('submit', (event) => {
         headers: { Accept: 'application/json' },
         body: data,
       });
+      if (response.status === 401) {
+        const { login_url: loginUrl } = await response.json();
+        window.location.assign(loginUrl);
+        return;
+      }
       if (!response.ok) throw new Error('Cart update failed');
       const { cart_count: count } = await response.json();
       cartBadge.textContent = count;

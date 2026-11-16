@@ -55,6 +55,12 @@ def view_cart():
 
 @cart_bp.route('/cart/add/<product_id>', methods=['POST', 'GET'])
 def add_to_cart(product_id):
+    if current_customer() is None:
+        flash('Vui lòng đăng nhập để mua hoặc thêm sản phẩm vào giỏ hàng.', 'purchase_login')
+        if request.accept_mimetypes.best == 'application/json':
+            return {'login_url': url_for('auth.login')}, 401
+        return redirect(url_for('auth.login'))
+
     clean_product_id = clean_id(product_id)
     if 'cart' not in session:
         session['cart'] = {}
@@ -116,11 +122,15 @@ def restore_stock(reserved):
 
 @cart_bp.route('/cart/checkout', methods=['POST'])
 def checkout():
+    customer = current_customer()
+    if customer is None:
+        flash('Vui lòng đăng nhập để đặt hàng.', 'purchase_login')
+        return redirect(url_for('auth.login'))
+
     cart = session.get('cart', {})
     if not cart:
         return redirect(url_for('cart.view_cart'))
 
-    customer = current_customer()
     quantities = {}
     for raw_id, quantity in cart.items():
         try:
@@ -136,15 +146,13 @@ def checkout():
 
     order = {
         '_id': ObjectId(),
+        'customer_id': customer['_id'],
         'customer_name': request.form.get('customer_name', 'Khách hàng'),
         'phone': request.form.get('phone', ''),
         'address': request.form.get('address', ''),
         'items': [],
         'created_at': datetime.now(timezone.utc),
     }
-    if customer is not None:
-        order['customer_id'] = customer['_id']
-
     reserved = []
     try:
         for product_id, quantity in quantities.items():
