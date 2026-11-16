@@ -22,8 +22,13 @@
                 <input type="text" name="login_id" class="form-control" required placeholder="Nhập email, SĐT hoặc 'admin'...">
             </div>
             <div class="mb-3">
-                <label class="form-label fw-bold small">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required placeholder="Nhập mật khẩu...">
+                <label for="password" class="form-label fw-bold small">Mật khẩu</label>
+                <div class="input-group">
+                    <input id="password" type="password" name="password" class="form-control" autocomplete="current-password" required placeholder="Nhập mật khẩu...">
+                    <button type="button" class="btn btn-outline-secondary" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow-sm mt-2">
                 <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập
@@ -35,4 +40,5 @@
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/password-toggle.js') }}" defer></script>
 {% endblock %}
